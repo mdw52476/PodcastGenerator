@@ -3,7 +3,13 @@
   "build": {
     "builder": "DOCKERFILE",
     "dockerfilePath": "Dockerfile",
-    "watchPatterns": ["apps/worker/**", "packages/**", "Dockerfile", "pnpm-lock.yaml"]
+    "watchPatterns": [
+      "/apps/worker/**",
+      "/packages/**",
+      "/Dockerfile",
+      "/pnpm-lock.yaml",
+      "/railway.json"
+    ]
   },
   "deploy": {
     "restartPolicyType": "ON_FAILURE",
