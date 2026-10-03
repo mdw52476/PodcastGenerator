@@ -23,6 +23,7 @@
   },
   "exports": {
     ".": "./src/index.ts",
+    "./episode": "./src/Episode.tsx",
     "./pipeline": "./pipeline/index.ts"
   }
 }

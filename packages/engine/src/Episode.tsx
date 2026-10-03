@@ -1,6 +1,7 @@
 import React from "react";
-import { AbsoluteFill, Html5Audio, interpolate, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Html5Audio, interpolate, Sequence, useCurrentFrame, useVideoConfig } from "remotion";
 import { musicGain, type ResolvedPlan } from "@shoebox/edit-plan";
+import { asset } from "./assets";
 import "./fonts";
 import { Captions } from "./Captions";
 import { GradeFilter, GradeOverlay } from "./Grade";
@@ -53,13 +54,13 @@ export const Episode: React.FC<EpisodeProps> = ({ plan, placeholderLabels = true
       <Bookends durationSec={plan.durationSec} />
 
       {/* Audio: narration at unity; music beds faded and ducked under Walt's voice. */}
-      <Html5Audio src={staticFile(plan.narrationSrc)} />
+      <Html5Audio src={asset(plan.narrationSrc)} />
       {plan.music.map((m, i) => {
         const from = f(m.start);
         const to = f(Math.min(plan.durationSec, m.end + m.fadeOutSec));
         return (
           <Sequence key={i} from={from} durationInFrames={Math.max(1, to - from)} layout="none">
-            <Html5Audio src={staticFile(m.src)} volume={(fr) => musicGain(m, plan.voiceSpans, (from + fr) / fps)} />
+            <Html5Audio src={asset(m.src)} volume={(fr) => musicGain(m, plan.voiceSpans, (from + fr) / fps)} />
           </Sequence>
         );
       })}

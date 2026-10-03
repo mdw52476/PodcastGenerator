@@ -9,7 +9,7 @@ import { cpus } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { bundle } from "@remotion/bundler";
 import { renderMedia, selectComposition } from "@remotion/renderer";
-import { EditPlan, resolvePlan, type Issue, type MusicItem, type WordTiming } from "@shoebox/edit-plan";
+import { EditPlan, resolvePlan, type Issue, type MusicItem, type ResolvedPlan, type WordTiming } from "@shoebox/edit-plan";
 import { alignNarration, ENGINE_DIR, FFMPEG, proxyArgs, PYTHON, REPO_DIR, run } from "./lib";
 
 export type Stage = "validate" | "align" | "music" | "bundle" | "render" | "loudness" | "proxy" | "done";
@@ -44,6 +44,8 @@ export interface RenderResult {
   issues: Issue[];
   loudness: { integrated?: string; truePeak?: string };
   seconds: number;
+  /** The prepared inputs, e.g. for exportPreviewBundle. */
+  prepared: Prepared;
 }
 
 export class PlanError extends Error {
@@ -64,7 +66,19 @@ const WEIGHTS: Record<Stage, [number, number]> = {
   done: [1, 1],
 };
 
-export async function renderEpisode(o: RenderOptions): Promise<RenderResult> {
+export interface Prepared {
+  plan: EditPlan;
+  outDir: string;
+  /** Everything the composition loads: fonts, narration, music beds, shot images. */
+  publicDir: string;
+  inputProps: { plan: ResolvedPlan; placeholderLabels: boolean };
+  issues: Issue[];
+  started: number;
+  emit: (stage: Stage, within?: number, message?: string) => void;
+}
+
+/** Steps 1-2: validate, resolve cues, generate music, gather assets. No video is rendered. */
+export async function prepareEpisode(o: RenderOptions): Promise<Prepared> {
   const started = Date.now();
   const emit = (stage: Stage, within = 0, message?: string) => {
     const [a, b] = WEIGHTS[stage];
@@ -147,6 +161,43 @@ export async function renderEpisode(o: RenderOptions): Promise<RenderResult> {
   const { resolved } = resolvePlan(planForRender, words, { allowPlaceholders: !strict, musicSrc: (_m, i) => musicFiles[i] });
   const inputProps = { plan: resolved, placeholderLabels: o.labels !== false };
   writeFileSync(join(outDir, "props.json"), JSON.stringify(inputProps));
+  return { plan, outDir, publicDir, inputProps, issues: first.issues, started, emit };
+}
+
+/**
+ * Package what the browser preview (Remotion Player) needs: props.json with asset
+ * paths relative to the bundle, narration, shot images, and music beds as AAC
+ * (the WAV beds are ~25 MB each; the preview only needs ~2 MB).
+ * Fonts are not included; the web app serves its own copies.
+ */
+export async function exportPreviewBundle(p: Prepared, bundleDir: string): Promise<string[]> {
+  rmSync(bundleDir, { recursive: true, force: true });
+  mkdirSync(bundleDir, { recursive: true });
+  const props = structuredClone(p.inputProps);
+  const files: string[] = [];
+  const copy = (rel: string) => {
+    mkdirSync(dirname(join(bundleDir, rel)), { recursive: true });
+    copyFileSync(join(p.publicDir, rel), join(bundleDir, rel));
+    files.push(rel);
+  };
+  copy(props.plan.narrationSrc);
+  for (const s of props.plan.shots) if (s.src) copy(s.src);
+  for (const m of props.plan.music) {
+    const rel = m.src.replace(/\.wav$/, ".m4a");
+    mkdirSync(dirname(join(bundleDir, rel)), { recursive: true });
+    await run(FFMPEG, ["-hide_banner", "-y", "-i", join(p.publicDir, m.src), "-c:a", "aac", "-b:a", "128k", join(bundleDir, rel)]);
+    m.src = rel;
+    files.push(rel);
+  }
+  writeFileSync(join(bundleDir, "props.json"), JSON.stringify(props));
+  files.push("props.json");
+  return files;
+}
+
+export async function renderEpisode(o: RenderOptions): Promise<RenderResult> {
+  const prepared = await prepareEpisode(o);
+  const { plan, outDir, publicDir, inputProps, started, emit } = prepared;
+  const first = { issues: prepared.issues };
 
   // ------------------------------------------------------------ 3. render
   emit("bundle", 0, "Bundling composition");
@@ -214,7 +265,7 @@ export async function renderEpisode(o: RenderOptions): Promise<RenderResult> {
     JSON.stringify({ episode: id, renderedAt: new Date().toISOString(), seconds, frames, loudness, issues: first.issues }, null, 2),
   );
   emit("done", 1, "Done");
-  return { episodeId: id, finalPath, proxyPath: proxy, reportPath, issues: first.issues, loudness, seconds };
+  return { episodeId: id, finalPath, proxyPath: proxy, reportPath, issues: first.issues, loudness, seconds, prepared };
 }
 
 /** Generator parameters for a music item. show-theme is a placeholder bed until a real theme exists. */

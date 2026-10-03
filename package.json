@@ -7,11 +7,14 @@
     "align": "tsx packages/engine/scripts/align.ts",
     "preview": "pnpm --filter @shoebox/engine studio",
     "test": "vitest run",
-    "typecheck": "tsc -p packages/edit-plan && tsc -p packages/text-rules && tsc -p packages/engine && tsc -p apps/worker",
+    "typecheck": "tsc -p packages/edit-plan && tsc -p packages/text-rules && tsc -p packages/engine && tsc -p apps/worker && tsc -p apps/web",
     "check-text": "tsx packages/text-rules/src/cli.ts",
     "job": "tsx apps/worker/src/cli.ts",
     "worker": "tsx apps/worker/src/index.ts",
-    "dropbox-auth": "tsx apps/worker/src/dropbox-auth.ts"
+    "dropbox-auth": "tsx apps/worker/src/dropbox-auth.ts",
+    "web": "pnpm --filter @shoebox/web dev",
+    "web:build": "pnpm --filter @shoebox/web build",
+    "owner:add": "tsx apps/worker/src/owner.ts"
   },
   "devDependencies": {
     "@types/node": "^24",

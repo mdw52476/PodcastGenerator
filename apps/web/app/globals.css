@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter.ttf") format("truetype");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Oswald";
+  src: url("/fonts/Oswald.ttf") format("truetype");
+  font-weight: 200 700;
+  font-display: swap;
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Oswald", ui-sans-serif, system-ui, sans-serif;
+  --color-ink: #0e1113;
+  --color-panel: #161a1d;
+  --color-raised: #1d2226;
+  --color-line: #2a3035;
+  --color-muted: #8b949a;
+  --color-text: #e6e2dc;
+  --color-amber: #e8a33d;
+  --color-teal: #5fa8a8;
+  --color-danger: #e0675a;
+  --color-ok: #79b47a;
+}
+
+html,
+body {
+  background: var(--color-ink);
+  color: var(--color-text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-amber);
+  outline-offset: 2px;
+}

@@ -1,6 +1,7 @@
 import React from "react";
-import { AbsoluteFill, Img, interpolate, OffthreadVideo, random, staticFile, useCurrentFrame, useVideoConfig, Easing } from "remotion";
+import { AbsoluteFill, Img, interpolate, OffthreadVideo, random, useCurrentFrame, useVideoConfig, Easing } from "remotion";
 import type { Motion, ResolvedPlan } from "@shoebox/edit-plan";
+import { asset } from "./assets";
 import { BODY_FONT } from "./fonts";
 
 type ShotData = ResolvedPlan["shots"][number];
@@ -120,8 +121,8 @@ export const Shot: React.FC<{ shot: ShotData; durationInFrames: number; fadeInFr
   let media: React.ReactNode;
   if (!shot.src) media = <Placeholder shot={shot} />;
   else if (shot.mediaType === "video")
-    media = <OffthreadVideo src={staticFile(shot.src)} muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />;
-  else media = <Img src={staticFile(shot.src)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />;
+    media = <OffthreadVideo src={asset(shot.src)} muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />;
+  else media = <Img src={asset(shot.src)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />;
 
   return (
     <AbsoluteFill style={{ opacity, overflow: "hidden" }}>

@@ -1,9 +1,9 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
-import { PlanError, renderEpisode, type RenderEvent } from "@shoebox/engine/pipeline";
+import { exportPreviewBundle, PlanError, prepareEpisode, renderEpisode, type Prepared, type RenderEvent } from "@shoebox/engine/pipeline";
 import { dropboxConfigured, dropboxUpload } from "./dropbox";
-import { optional } from "./env";
+import { BUCKET, optional } from "./env";
 import { db, downloadFile, signedUrl, uploadFile, type RenderJob } from "./supabase";
 
 const WORK_DIR = optional("WORK_DIR") ?? join(tmpdir(), "shoebox-jobs");
@@ -38,6 +38,25 @@ export async function runJob(job: RenderJob): Promise<void> {
       await downloadFile(key, join(inputDir, rel));
     }
 
+    const onEvent = (e: RenderEvent) => {
+      current = e;
+      if (e.message) log(job, e.message);
+      if (Date.now() - lastWrite > 5000) {
+        lastWrite = Date.now();
+        void update(job, { stage: e.stage, progress: e.progress, heartbeat_at: new Date().toISOString() });
+      }
+    };
+
+    // Preview-only job: no video, just the bundle the browser player loads.
+    if (job.kind === "prepare") {
+      const prepared = await prepareEpisode({ planPath, outDir: join(dir, "out"), strict: false, labels: job.options.labels !== false, cacheDir: optional("MUSIC_CACHE_DIR"), onEvent });
+      await update(job, { stage: "upload", progress: 0.9, heartbeat_at: new Date().toISOString() });
+      const preview = await uploadPreviewBundle(job, prepared, join(dir, "bundle"));
+      await update(job, { status: "succeeded", stage: "done", progress: 1, outputs: { preview }, finished_at: new Date().toISOString() });
+      log(job, "preview bundle ready");
+      return;
+    }
+
     // 2. render
     const result = await renderEpisode({
       planPath,
@@ -48,14 +67,7 @@ export async function runJob(job: RenderJob): Promise<void> {
       proxy: job.options.proxy !== false,
       concurrency: optional("RENDER_CONCURRENCY") ? Number(optional("RENDER_CONCURRENCY")) : undefined,
       cacheDir: optional("MUSIC_CACHE_DIR"),
-      onEvent: (e) => {
-        current = e;
-        if (e.message) log(job, e.message);
-        if (Date.now() - lastWrite > 5000) {
-          lastWrite = Date.now();
-          void update(job, { stage: e.stage, progress: e.progress, heartbeat_at: new Date().toISOString() });
-        }
-      },
+      onEvent,
     });
 
     // 3. upload outputs
@@ -89,6 +101,9 @@ export async function runJob(job: RenderJob): Promise<void> {
       log(job, "Dropbox not configured; skipping owner copy");
     }
 
+    // Full renders refresh the browser preview so it always matches the latest render.
+    if (job.kind === "episode") outputs.preview = await uploadPreviewBundle(job, result.prepared, join(dir, "bundle"));
+
     outputs.loudness = result.loudness;
     outputs.renderSeconds = Math.round(result.seconds);
     await update(job, { status: "succeeded", stage: "done", progress: 1, outputs, finished_at: new Date().toISOString() });
@@ -107,6 +122,36 @@ export async function runJob(job: RenderJob): Promise<void> {
     clearInterval(beat);
     rmSync(dir, { recursive: true, force: true });
   }
+}
+
+const CONTENT_TYPES: Record<string, string> = { ".json": "application/json", ".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".mp4": "video/mp4" };
+
+/**
+ * Upload the browser-preview bundle to previews/<episode>/ and remove files from
+ * older bundles. Returns the props.json key.
+ */
+async function uploadPreviewBundle(job: RenderJob, prepared: Prepared, bundleDir: string): Promise<string> {
+  const prefix = `previews/${job.episode_id}`;
+  const files = await exportPreviewBundle(prepared, bundleDir);
+  // props.json last, so the web app never sees props pointing at files not yet uploaded.
+  for (const rel of [...files.filter((f) => f !== "props.json"), "props.json"]) {
+    log(job, `preview ${rel}`);
+    await uploadFile(join(bundleDir, rel), `${prefix}/${rel}`, CONTENT_TYPES[rel.slice(rel.lastIndexOf("."))] ?? "application/octet-stream");
+  }
+  await removeStale(prefix, new Set(files));
+  return `${prefix}/props.json`;
+}
+
+/** Delete objects under prefix (recursively) whose relative path is not in keep. */
+async function removeStale(prefix: string, keep: Set<string>, sub = ""): Promise<void> {
+  const { data } = await db().storage.from(BUCKET).list(`${prefix}${sub ? `/${sub}` : ""}`, { limit: 1000 });
+  const stale: string[] = [];
+  for (const o of data ?? []) {
+    const rel = sub ? `${sub}/${o.name}` : o.name;
+    if (o.id === null) await removeStale(prefix, keep, rel); // folder
+    else if (!keep.has(rel)) stale.push(`${prefix}/${rel}`);
+  }
+  if (stale.length) await db().storage.from(BUCKET).remove(stale);
 }
 
 /** On shutdown (Railway redeploy), hand the job back to the queue without using up an attempt. */

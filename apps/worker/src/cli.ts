@@ -1,4 +1,4 @@
-// pnpm job submit --plan fixtures/ep01/edit-plan.json [--frames 0-899] [--strict] [--no-labels] [--no-proxy] [--no-dropbox] [--watch]
+// pnpm job submit --plan fixtures/ep01/edit-plan.json [--prepare | --frames 0-899] [--strict] [--no-labels] [--no-proxy] [--no-dropbox] [--watch]
 // pnpm job watch [job-id]      (latest job if no id)
 // pnpm job list
 import { createHash } from "node:crypto";
@@ -57,7 +57,7 @@ async function submit() {
     .from("render_jobs")
     .insert({
       episode_id: plan.episode.id,
-      kind: frames ? "preview" : "episode",
+      kind: args.prepare === true ? "prepare" : frames ? "preview" : "episode",
       plan: raw,
       assets,
       options: {

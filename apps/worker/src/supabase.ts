@@ -10,7 +10,7 @@ import { BUCKET, need } from "./env";
 export interface RenderJob {
   id: string;
   episode_id: string;
-  kind: "episode" | "preview";
+  kind: "episode" | "preview" | "prepare";
   plan: Record<string, any>;
   assets: Record<string, string>;
   options: { frames?: [number, number]; strict?: boolean; labels?: boolean; proxy?: boolean; dropbox?: boolean };
