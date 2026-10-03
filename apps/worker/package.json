@@ -1,0 +1,21 @@
+{
+  "name": "@shoebox/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "job": "tsx src/cli.ts",
+    "dropbox-auth": "tsx src/dropbox-auth.ts"
+  },
+  "dependencies": {
+    "@shoebox/edit-plan": "workspace:*",
+    "@shoebox/engine": "workspace:*",
+    "@supabase/supabase-js": "^2.117.2",
+    "tsx": "^4.23.15",
+    "tus-js-client": "^4.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0"
+  }
+}

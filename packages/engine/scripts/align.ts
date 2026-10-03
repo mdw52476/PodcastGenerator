@@ -3,7 +3,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { EditPlan } from "@shoebox/edit-plan";
-import { alignNarration, parseArgs } from "./lib";
+import { alignNarration, parseArgs } from "../pipeline/lib";
 
 const args = parseArgs(process.argv.slice(2));
 if (typeof args.plan !== "string") {

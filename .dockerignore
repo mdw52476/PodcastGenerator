@@ -1,0 +1,9 @@
+**/node_modules
+out
+.cache
+.git
+.env
+.env.*
+fixtures
+docs
+**/__pycache__

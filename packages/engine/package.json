@@ -20,5 +20,9 @@
     "@types/react": "^19.2.0",
     "@types/node": "^24.0.0",
     "tsx": "^4.23.15"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./pipeline": "./pipeline/index.ts"
   }
 }
