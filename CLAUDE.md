@@ -22,4 +22,7 @@ Matt is not a professional developer. Explain choices in plain language, keep se
 - Word timings: `pnpm align --plan fixtures/ep01/edit-plan.json`
 - Text rules: `pnpm check-text <file>`
 - Tests: `pnpm test`; types: `pnpm typecheck`
+- Cloud render: `pnpm job submit --plan <plan> [--frames a-b] --watch`; `pnpm job watch|list`; local worker `pnpm worker`
+- Supabase project ref `tfjoqdcysltgmggeyryd`; Railway project `shoebox-studio` (id 7384a503-55f3-44be-929a-97e6d439531a), service `render-worker` (bd1f126d-a8c6-4cb9-8cf0-a279cf928d5c), auto-deploys from GitHub `mdw52476/PodcastGenerator` main
+- Secrets live in `.env` (laptop) and Railway Variables. Never read or print their values; check them by name/length only.
 - pnpm lives in `%APPDATA%\npm` (user install; corepack needs admin on this machine).

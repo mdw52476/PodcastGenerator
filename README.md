@@ -2,7 +2,7 @@
 
 Renders story-podcast episodes from a JSON edit plan. See `BUILD_SPEC.md` for the full design and `CLAUDE.md` for working rules.
 
-**Status:** Phase 1 (engine + CLI, local).
+**Status:** Phase 2 (cloud render worker on Railway, job queue + storage on Supabase, copies to Dropbox).
 
 ## One-time setup (Windows)
 
@@ -40,6 +40,28 @@ The first render downloads Remotion's headless Chrome (~113 MB) and the first al
 
 Output lands in `out/<episode-id>/`: `<id>.mp4` (final, -14 LUFS), `<id>-proxy-720p.mp4`, and `render-report.json` (loudness and any warnings).
 
+## Rendering in the cloud (Phase 2)
+
+Your laptop only uploads inputs and queues the job; Railway renders it.
+
+| What | Command |
+|---|---|
+| Render an episode on Railway | `pnpm job submit --plan fixtures/ep01/edit-plan.json --watch` |
+| Quick cloud test (2 s) | `pnpm job submit --plan fixtures/ep01/edit-plan.json --frames 2400-2459 --watch` |
+| Follow the latest job | `pnpm job watch` |
+| Recent jobs | `pnpm job list` |
+| Skip the Dropbox copy | add `--no-dropbox` |
+| Run the worker on this laptop instead | `pnpm worker` (stop it afterwards so Railway gets the jobs) |
+| Reconnect Dropbox | `pnpm dropbox-auth` (reads key/secret/code from `.env`) |
+
+Finished files:
+- **Supabase Storage**, bucket `studio`: `renders/<episode>/episode/` (full renders) or `renders/<episode>/preview/` (`--frames` tests). Re-rendering overwrites.
+- **Dropbox**: `Apps/Shoebox Studio/<show>/<episode>/` (previews in a `previews/` subfolder).
+
+Where things live:
+- Supabase project `shoebox-studio` (ref `tfjoqdcysltgmggeyryd`): tables `episodes`, `render_jobs`; schema in `supabase/migrations/`.
+- Railway project `shoebox-studio`, service `render-worker` (8 vCPU / 8 GB cap). Deploys automatically on every push to `main` on GitHub (`mdw52476/PodcastGenerator`). Settings come from its Variables tab (same names as `.env.example`).
+
 ## Layout
 
 ```
@@ -49,6 +71,9 @@ packages/
   engine/      Remotion composition (Episode) + render/align scripts
   music/       ambient_bed.py (code-composed beds)
   align/       align.py (faster-whisper times, script words)
+apps/
+  worker/      Railway render worker + job CLI + Dropbox setup
+supabase/      database migrations
 fixtures/ep01/ real test episode
 docs/          licenses
 ```
