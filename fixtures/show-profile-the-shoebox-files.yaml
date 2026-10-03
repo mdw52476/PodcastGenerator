@@ -1,0 +1,63 @@
+# Show profile: The Shoebox Files (true crime / mystery)
+# Source of truth lives in the claude.ai project "Pod workflow" at claude/shows/true-crime.md.
+show_name: "The Shoebox Files"
+slug: true-crime
+theme: true crime and unsolved mysteries — disappearances, cold cases, strange deaths, cases with a twist
+story_mode: real-events
+narrator:
+  name: Walt Harlan
+  identity: A retired small-town Iowa newspaper reporter in his late 60s who kept the stories nobody finished in a shoebox under his desk. A fictional narrator, not a party to any case.
+  voice_traits: Plainspoken, Midwestern, dry humor in dark places, notices small physical details, admits what he doesn't know, never sensational. Talks to the listener directly, like someone across a kitchen table.
+  relationship_to_story: Investigator-witness. He reconstructs each case from records, interviews, and visits to the places, and tells us what it felt like to stand there.
+disclaimer: "This story is based on real events and public records. I'm a fictional narrator, and some scenes are dramatized. Where the facts are disputed, I'll tell you."
+opener: |
+  Placed right after the cold open, over the show theme, followed by the disclaimer.
+  "This is The Shoebox Files. I'm Walt Harlan. I spent thirty-some years at a small paper in Iowa, and I kept the stories nobody finished in a shoebox under my desk. Pull up a chair. This one [came across the wire this week | has been in the box a long time | <episode-specific hook>]."
+closer: |
+  Placed at the very end, after any case-specific tip line, over the show theme.
+  "That's the file for now. I'll put it back in the shoebox, but I'll keep the lid loose. If you know something about a case like this, tell the people who can do something with it. And if you want the next story, you know where to find me. This has been The Shoebox Files. I'm Walt Harlan. Goodnight."
+audience: Adults 25–55 who listen to narrative true crime while driving, working, or before sleep.
+tone: Atmospheric, respectful to victims, quietly suspenseful. Curiosity over shock.
+writing:
+  voice_guide: voice-guide
+  register: adult-literary-fiction
+  cleanup: ai-tells
+  prime_directives:
+    - No "not" (or n't contractions) in narration or written copy; dialogue/quotes exempt.
+    - "And" at most once per sentence.
+    - No em dashes in audience-facing text.
+target_minutes: 15
+words_per_minute: 140   # measured: Bill at speed 0.88
+voice:
+  tool: elevenlabs
+  name: "Bill - Wise, Mature, Balanced"
+  voice_id: "pqHfZKP75CvOlQylNhV4"
+  model: eleven_multilingual_v2
+  stability: 0.35
+  similarity_boost: 0.8
+  style: 0.2
+  speed: 0.88
+visual_style:
+  look: cinematic 35mm documentary reenactment, shallow depth of field, no faces in clear focus
+  palette: desaturated teal and amber, deep blacks, sodium-vapor orange at night
+  lighting: low-key, practical sources (lamps, headlights, streetlights), fog and haze
+  texture: subtle film grain, slight halation, occasional VHS/archival texture for flashbacks
+  camera: slow push-ins, gentle drifts, locked-off wides; no fast cuts
+  motifs: [rain on windows, empty roads at night, typewriter and case files, evidence tags, flickering motel signs, dense treelines, the shoebox]
+  never_show: [bodies, blood, wounds, weapons in use, identifiable real people, real logos or police insignia, children in peril]
+opener_visual: narrator's desk at night, lamp, typewriter, the shoebox lid lifting; show title card "The Shoebox Files"
+closer_visual: the shoebox lid settling back on loosely, the lamp clicks off
+captions: white sans-serif, 2 lines max, key word highlighted amber (#E8A33D)
+music: dark ambient drones and sparse piano (code-generated beds); a short recurring show theme under the opener and closer; drops to silence before reveals
+disclosure_card: true
+thumbnail_style: one strong atmospheric image, 3–5 word headline in bold condensed type, amber accent, no faces
+platforms:
+  long_form: [youtube]
+  shorts: [youtube_shorts]
+shorts:
+  count: 10
+  cadence: daily
+approval:
+  idea: true
+  final_video: true
+  shorts: false

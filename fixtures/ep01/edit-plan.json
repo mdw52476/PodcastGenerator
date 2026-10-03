@@ -1,0 +1,493 @@
+{
+  "schemaVersion": "0.2",
+  "show": "the-shoebox-files",
+  "episode": {
+    "id": "ep01-test",
+    "title": "The Name in the Water",
+    "status": "awaiting-approval"
+  },
+  "output": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "loudnessLUFS": -14,
+    "truePeakDb": -1.5
+  },
+  "narration": {
+    "audio": "ep01-narration-v2.mp3",
+    "durationSec": 403.33,
+    "scriptText": "ep01-voiceover-v2.txt",
+    "wordTimingsFile": "word-timings.json",
+    "note": "word-timings.json comes from `pnpm align` (faster-whisper times, script spellings). Captions must use scriptText spellings."
+  },
+  "style": {
+    "grade": {
+      "saturation": 0.7,
+      "contrast": 1.08,
+      "tint": "teal-shadows-amber-highlights",
+      "vignette": 0.25,
+      "grain": 0.12,
+      "halation": 0.1
+    },
+    "crossfadeSec": 0.5,
+    "fonts": {
+      "title": "condensed bold sans (OFL)",
+      "captions": "clean sans (OFL)"
+    }
+  },
+  "shots": [
+    {
+      "id": "s01",
+      "cue": "It's May 22, 1981",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Small 1980s fishing boat idling on flat grey ocean a mile offshore, distant hazy city skyline"
+      },
+      "motion": "push_in",
+      "shotType": "wide"
+    },
+    {
+      "id": "s02",
+      "cue": "One of the men aboard",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Weathered hand reaching for an old marine radio handset in a boat cabin, hand only"
+      },
+      "motion": "static_sway",
+      "shotType": "detail"
+    },
+    {
+      "id": "s03",
+      "cue": "That radio call opens a file",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Empty beach at dawn, gulls lifting off wet sand, boardwalk lights blinking off"
+      },
+      "motion": "drift_left",
+      "shotType": "wide"
+    },
+    {
+      "id": "s04",
+      "cue": "This is The Shoebox Files",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Newspaperman's desk at night, brass lamp, manual typewriter, a worn shoebox, lid lifting"
+      },
+      "motion": "push_in",
+      "shotType": "detail"
+    },
+    {
+      "id": "s05",
+      "cue": "This story is based on real events",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Shoebox full of yellowed clippings and letters under lamp light"
+      },
+      "motion": "push_in",
+      "shotType": "detail"
+    },
+    {
+      "id": "s06",
+      "cue": "Now, stories from the Jersey Shore",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Wire-service printout curling off an old printer onto a desk"
+      },
+      "motion": "static",
+      "shotType": "detail"
+    },
+    {
+      "id": "s07",
+      "cue": "Glen Napoleon Burbage",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Coffee mug beside a manila folder, rain-streaked window behind"
+      },
+      "motion": "push_in",
+      "shotType": "detail"
+    },
+    {
+      "id": "s08",
+      "cue": "Sometime in March of 1981",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "1981 airport terminal, rain on tall windows, traveler silhouette walking away, back to camera"
+      },
+      "motion": "drift_right",
+      "shotType": "wide"
+    },
+    {
+      "id": "s09",
+      "cue": "The state police put the date",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Boardwalk at night, casino lights blurred to bokeh, an empty bench"
+      },
+      "motion": "static",
+      "shotType": "wide"
+    },
+    {
+      "id": "s10",
+      "cue": "And here's a small thing",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Old calendar page pinned to a corkboard, numbers soft and unreadable"
+      },
+      "motion": "push_in",
+      "shotType": "detail"
+    },
+    {
+      "id": "s11",
+      "cue": "Two months went by",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Grey open ocean, a bell buoy rocking in the swell, mist"
+      },
+      "motion": "static",
+      "shotType": "wide"
+    },
+    {
+      "id": "s12",
+      "cue": "Investigators did what they could",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Long records room, rows of steel file drawers, one flickering fluorescent tube"
+      },
+      "motion": "push_in",
+      "shotType": "wide"
+    },
+    {
+      "id": "s13",
+      "cue": "So on paper, his family had a death",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Two separate steel drawers, one sliding open, plain unmarked folders"
+      },
+      "motion": "static",
+      "shotType": "detail"
+    },
+    {
+      "id": "s14",
+      "cue": "That's how things sat",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Dust drifting in a shaft of light in an empty office"
+      },
+      "motion": "drift_left",
+      "shotType": "wide"
+    },
+    {
+      "id": "s15",
+      "cue": "It's April of 2026",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Bright modern lecture hall, laptops on long tables, harbor skyline through windows, adults seen from behind, out of focus"
+      },
+      "motion": "drift_right",
+      "shotType": "wide"
+    },
+    {
+      "id": "s16",
+      "cue": "The cases they work are real ones",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Over-the-shoulder laptop screen glowing with an abstract branching diagram, unreadable"
+      },
+      "motion": "push_in",
+      "shotType": "detail"
+    },
+    {
+      "id": "s17",
+      "cue": "Branch by branch",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Whiteboard with hand-drawn branching family-tree lines, no legible writing"
+      },
+      "motion": "pan_up",
+      "shotType": "detail"
+    },
+    {
+      "id": "s18",
+      "cue": "From there, it moves",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Southern back road lined with live oaks and Spanish moss, warm low morning sun"
+      },
+      "motion": "push_in",
+      "shotType": "wide"
+    },
+    {
+      "id": "s19",
+      "cue": "In July of 2026",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Laboratory bench, test tubes in a rack, gloved hands only"
+      },
+      "motion": "static",
+      "shotType": "detail"
+    },
+    {
+      "id": "s20",
+      "cue": "Forty-five years. Two drawers",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Kitchen table at night, coffee cup, rain running down the window"
+      },
+      "motion": "static",
+      "shotType": "detail"
+    },
+    {
+      "id": "s21",
+      "cue": "Now, here's what nobody can tell you",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Atlantic City shoreline at dusk, waves folding onto empty sand, distant boardwalk lights"
+      },
+      "motion": "drift_left",
+      "shotType": "wide"
+    },
+    {
+      "id": "s22",
+      "cue": "I've got theories",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Closed shoebox on a desk under a lamp"
+      },
+      "motion": "push_in",
+      "shotType": "detail"
+    },
+    {
+      "id": "s23",
+      "cue": "I walked the beach",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Winter beach, a single line of footprints toward grey surf, wind-blown sand"
+      },
+      "motion": "push_in",
+      "shotType": "wide"
+    },
+    {
+      "id": "s24",
+      "cue": "Glen Burbage was a father",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Hands closing a worn manila case folder under a desk lamp, hands only"
+      },
+      "motion": "static",
+      "shotType": "detail"
+    },
+    {
+      "id": "s25",
+      "cue": "If you knew Glen Burbage",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Calm night ocean under faint moonlight"
+      },
+      "motion": "drift_right",
+      "shotType": "wide"
+    },
+    {
+      "id": "s26",
+      "cue": "That's the file for now",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "The shoebox lid settling back on loosely, desk lamp beside it"
+      },
+      "motion": "static",
+      "shotType": "detail"
+    },
+    {
+      "id": "s27",
+      "cue": "This has been The Shoebox Files",
+      "approxStartSec": null,
+      "visual": {
+        "type": "image",
+        "src": null,
+        "prompt": "Same desk, the lamp clicks off, blue window light, fade to black"
+      },
+      "motion": "static",
+      "shotType": "detail"
+    }
+  ],
+  "text": [
+    {
+      "type": "disclosure",
+      "text": "AI narration. Based on real events and public records.",
+      "startSec": 1,
+      "endSec": 10,
+      "position": "lower-left"
+    },
+    {
+      "type": "title_card",
+      "text": "THE SHOEBOX FILES",
+      "cue": "This is The Shoebox Files",
+      "durationSec": 4
+    },
+    {
+      "type": "episode_title",
+      "text": "The Name in the Water",
+      "cue": "Now, stories from the Jersey Shore",
+      "durationSec": 4
+    },
+    {
+      "type": "lower_third",
+      "text": "NJ State Police Missing Persons Unit · missingpinformation@njsp.gov",
+      "cue": "If you knew Glen Burbage",
+      "durationSec": 6
+    },
+    {
+      "type": "end_card",
+      "text": "THE SHOEBOX FILES",
+      "cue": "This has been The Shoebox Files",
+      "untilEnd": true
+    }
+  ],
+  "captions": {
+    "enabled": true,
+    "maxLines": 2,
+    "position": "bottom-center",
+    "color": "#FFFFFF",
+    "highlightColor": "#E8A33D",
+    "mode": "word-highlight"
+  },
+  "music": [
+    {
+      "track": "show-theme",
+      "cueStart": "This is The Shoebox Files",
+      "cueEnd": "Now, stories from the Jersey Shore",
+      "fadeInSec": 1.5,
+      "fadeOutSec": 2,
+      "duckUnderVoiceDb": -14
+    },
+    {
+      "track": "bed:dark",
+      "generator": {
+        "script": "ambient_bed.py",
+        "seed": 7
+      },
+      "cueStart": "Now, stories from the Jersey Shore",
+      "cueEnd": "So let's jump ahead",
+      "fadeInSec": 2,
+      "fadeOutSec": 2,
+      "duckUnderVoiceDb": -16
+    },
+    {
+      "track": "bed:lighter",
+      "generator": {
+        "script": "ambient_bed.py",
+        "seed": 11,
+        "key": "C major",
+        "density": "sparse"
+      },
+      "cueStart": "So let's jump ahead",
+      "cueEnd": "Forty-five years. Two drawers",
+      "fadeInSec": 2,
+      "fadeOutSec": 2,
+      "duckUnderVoiceDb": -16
+    },
+    {
+      "track": "bed:dark",
+      "generator": {
+        "script": "ambient_bed.py",
+        "seed": 23
+      },
+      "cueStart": "Forty-five years. Two drawers",
+      "cueEnd": "That's the file for now",
+      "fadeInSec": 2,
+      "fadeOutSec": 2,
+      "duckUnderVoiceDb": -16
+    },
+    {
+      "track": "show-theme",
+      "cueStart": "That's the file for now",
+      "untilEnd": true,
+      "fadeInSec": 1.5,
+      "fadeOutSec": 3,
+      "duckUnderVoiceDb": -14
+    }
+  ],
+  "shorts": [
+    {
+      "id": "short1",
+      "cueStart": "It's May 22, 1981",
+      "cueEnd": "for the next forty-five years.",
+      "hook": null
+    },
+    {
+      "id": "short2",
+      "cueStart": "The state police put the date",
+      "cueEnd": "would have turned sixty.",
+      "hook": null
+    },
+    {
+      "id": "short3",
+      "cueStart": "Investigators did what they could",
+      "cueEnd": "set them side by side.",
+      "hook": null
+    },
+    {
+      "id": "short4",
+      "cueStart": "It's April of 2026",
+      "cueEnd": "point to one name.",
+      "hook": null
+    },
+    {
+      "id": "short5",
+      "cueStart": "Now, here's what nobody can tell you",
+      "cueEnd": "right where they belong.",
+      "hook": null
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "shoebox-studio",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "scripts": {
+    "render": "tsx packages/engine/scripts/render.ts",
+    "align": "tsx packages/engine/scripts/align.ts",
+    "preview": "pnpm --filter @shoebox/engine studio",
+    "test": "vitest run",
+    "typecheck": "tsc -p packages/edit-plan && tsc -p packages/text-rules && tsc -p packages/engine",
+    "check-text": "tsx packages/text-rules/src/cli.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.0",
+    "vitest": "^5.0.3"
+  }
+}
