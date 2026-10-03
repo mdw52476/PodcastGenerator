@@ -88,6 +88,10 @@ async function watch(id?: string) {
     const line = `${j.status.padEnd(9)} ${pct(j.progress)}  ${j.stage ?? ""}`;
     if (line !== last) console.log(`${new Date().toLocaleTimeString()}  ${line}`);
     last = line;
+    if (j.status === "succeeded" && j.kind === "prepare") {
+      console.log(`\nPreview ready: ${j.outputs?.preview}`);
+      return;
+    }
     if (j.status === "succeeded") {
       console.log(`\nDone in ${j.outputs?.renderSeconds}s. Loudness ${j.outputs?.loudness?.integrated} LUFS, true peak ${j.outputs?.loudness?.truePeak} dBTP.`);
       for (const k of ["master", "proxy"]) if (j.outputs?.[k]) console.log(`  ${k}: ${j.outputs[k].url}`);

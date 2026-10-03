@@ -2,7 +2,7 @@
 
 Renders story-podcast episodes from a JSON edit plan. See `BUILD_SPEC.md` for the full design and `CLAUDE.md` for working rules.
 
-**Status:** Phase 2 (cloud render worker on Railway, job queue + storage on Supabase, copies to Dropbox).
+**Status:** Phase 3 (local web app: board, preview, approve). Rendering runs on Railway; data and files on Supabase; copies to Dropbox.
 
 ## One-time setup (Windows)
 
@@ -40,6 +40,22 @@ The first render downloads Remotion's headless Chrome (~113 MB) and the first al
 
 Output lands in `out/<episode-id>/`: `<id>.mp4` (final, -14 LUFS), `<id>-proxy-720p.mp4`, and `render-report.json` (loudness and any warnings).
 
+## The web app (Phase 3)
+
+Runs on this laptop. In PowerShell:
+
+```
+cd C:\Users\mdw52\VideoEditor\shoebox-studio
+pnpm web
+```
+
+Then open **http://localhost:3000** (use `localhost`, not `127.0.0.1`, or the sign-in link won't match). Sign in with the email link. Leave the PowerShell window open while you use it; press Ctrl+C there to stop.
+
+- **Board:** episodes in columns by stage. Click a card to open it.
+- **Episode page:** live preview (the same composition the worker renders), stage picker, Approve / Request changes / notes, render buttons with progress and download links, history.
+- **Refresh preview** rebuilds the preview bundle on Railway (~2 min). Full renders refresh it too.
+- Owner account: `pnpm owner:add <email>` (already done for mdw52476@gmail.com).
+
 ## Rendering in the cloud (Phase 2)
 
 Your laptop only uploads inputs and queues the job; Railway renders it.
@@ -72,6 +88,7 @@ packages/
   music/       ambient_bed.py (code-composed beds)
   align/       align.py (faster-whisper times, script words)
 apps/
+  web/         Next.js web app (board, preview, approve); runs locally
   worker/      Railway render worker + job CLI + Dropbox setup
 supabase/      database migrations
 fixtures/ep01/ real test episode

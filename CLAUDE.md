@@ -24,5 +24,7 @@ Matt is not a professional developer. Explain choices in plain language, keep se
 - Tests: `pnpm test`; types: `pnpm typecheck`
 - Cloud render: `pnpm job submit --plan <plan> [--frames a-b] --watch`; `pnpm job watch|list`; local worker `pnpm worker`
 - Supabase project ref `tfjoqdcysltgmggeyryd`; Railway project `shoebox-studio` (id 7384a503-55f3-44be-929a-97e6d439531a), service `render-worker` (bd1f126d-a8c6-4cb9-8cf0-a279cf928d5c), auto-deploys from GitHub `mdw52476/PodcastGenerator` main
+- Web app: `pnpm web` (Next.js 16 on http://localhost:3000, email-link sign-in, owner-only RLS via `private.is_owner()`). Hosted locally by the owner's choice; Vercel Hobby was ruled out (no commercial use). The web app only reads SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY from `.env`.
+- Railway autodeploy from GitHub was not firing as of 2026-10-03; deploy by reconnecting the service source if a push doesn't build.
 - Secrets live in `.env` (laptop) and Railway Variables. Never read or print their values; check them by name/length only.
 - pnpm lives in `%APPDATA%\npm` (user install; corepack needs admin on this machine).
