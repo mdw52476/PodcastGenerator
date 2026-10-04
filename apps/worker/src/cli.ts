@@ -54,7 +54,7 @@ async function submit() {
   if (getErr) throw new Error(`reading episode: ${getErr.message}`);
   if (existing) {
     const keepShorts = args["replace-shorts"] !== true && Array.isArray(existing.plan?.shorts);
-    if (keepShorts) raw.shorts = existing.plan.shorts;
+    if (keepShorts) raw.shorts = upgradePlan(existing.plan).shorts;
     const { error } = await db().from("episodes").update({ show: plan.show, title: plan.episode.title, plan: raw }).eq("id", plan.episode.id);
     if (error) throw new Error(`saving episode: ${error.message}`);
     console.log(`  updated episode ${plan.episode.id} (stage unchanged${keepShorts ? ", shorts kept from the web app" : ""})`);

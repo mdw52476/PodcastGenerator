@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { checkText } from "@shoebox/text-rules";
 import {
   EditPlan,
+  parsePlan,
   PLATFORMS,
   resolvePlan,
   resolveShort,
@@ -62,6 +63,37 @@ describe("planned shorts", () => {
     p2.shorts[0].hook = "He was not who they thought";
     const r = resolvePlan(p2, words, { allowPlaceholders: true });
     expect(r.issues.some((i) => i.level === "error" && i.where === "shorts.short1.hook")).toBe(true);
+  });
+});
+
+describe("hooks", () => {
+  it("fills an automatic, rule-passing hook when none is set", () => {
+    expect(resolved.shorts.filter((s) => s.hook).length).toBeGreaterThanOrEqual(4);
+    for (const s of resolved.shorts) {
+      expect(s.hookAuto).toBe(true);
+      if (!s.hook) continue;
+      expect(checkText(s.hook).filter((v) => v.severity === "error")).toEqual([]);
+      // Taken from inside the clip, but never the opening line Walt is already saying.
+      const inClip = words.filter((w) => w.start >= s.start - 0.01 && w.end <= s.end + 0.01).map((w) => w.word);
+      expect(inClip.join(" ").toLowerCase()).toContain(s.hook.toLowerCase());
+      expect(inClip.slice(0, 4).join(" ").toLowerCase().startsWith(s.hook.toLowerCase().split(" ").slice(0, 4).join(" "))).toBe(false);
+    }
+  });
+
+  it("keeps a custom hook and respects null as 'no hook'", () => {
+    const p2 = structuredClone(plan);
+    p2.shorts[0].hook = "Twenty days short of sixty";
+    p2.shorts[1].hook = null;
+    const r = resolvePlan(p2, words, { allowPlaceholders: true }).resolved;
+    expect(r.shorts[0]).toMatchObject({ hook: "Twenty days short of sixty", hookAuto: false });
+    expect(r.shorts[1]).toMatchObject({ hook: null, hookAuto: false });
+  });
+
+  it("upgrades 0.3 plans, where null meant 'not set', to automatic hooks", () => {
+    const old = { ...structuredClone(plan), schemaVersion: "0.3", shorts: plan.shorts.map((s) => ({ ...s, hook: null })) };
+    const parsed = parsePlan(old);
+    expect(parsed.success).toBe(true);
+    expect(parsed.data!.shorts.every((s) => s.hook === undefined)).toBe(true);
   });
 });
 

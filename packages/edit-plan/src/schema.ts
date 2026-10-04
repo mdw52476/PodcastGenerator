@@ -8,8 +8,10 @@ import { z } from "zod";
  *      music[].levelDb, visual.src may be null (placeholder in non-strict renders).
  * 0.3: shorts[] gain startSec/endSec overrides (word-snapped by the UI), platform,
  *      title/description/hashtags, crops as { x } per shot; shortsDefaults.
+ * 0.4: shorts[].hook: absent = automatic hook from the clip, null = no hook,
+ *      string = custom. (0.3 plans used null for "not set"; they upgrade to absent.)
  */
-export const SCHEMA_VERSION = "0.3";
+export const SCHEMA_VERSION = "0.4";
 
 export const WordTiming = z.object({
   word: z.string(),
@@ -92,7 +94,10 @@ export const Short = z.object({
   cueEnd: z.string(),
   startSec: z.number().nonnegative().optional(),
   endSec: z.number().positive().optional(),
-  /** On-screen line for the first seconds. Must pass the text rules. */
+  /**
+   * On-screen line for the first seconds. Must pass the text rules.
+   * Absent: an automatic hook is picked from the clip. null: no hook.
+   */
   hook: z.string().nullable().optional(),
   /** Horizontal crop centre per shot id, 0 = left edge, 0.5 = centre, 1 = right edge. */
   crops: z.record(z.string(), z.object({ x: z.number().min(0).max(1) })).optional(),
@@ -171,6 +176,11 @@ export function upgradePlan(raw: any): any {
     plan.schemaVersion = "0.2";
   }
   if (plan.schemaVersion === "0.2") plan.schemaVersion = "0.3";
+  if (plan.schemaVersion === "0.3") {
+    // In 0.3 a null hook meant "not set"; from 0.4 that is an absent hook (automatic).
+    for (const s of plan.shorts ?? []) if (s.hook === null) delete s.hook;
+    plan.schemaVersion = "0.4";
+  }
   return plan;
 }
 

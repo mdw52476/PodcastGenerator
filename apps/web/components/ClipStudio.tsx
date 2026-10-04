@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Player } from "@remotion/player";
 import { Short as ShortComposition } from "@shoebox/engine/short";
 import {
+  autoHook,
   CueIndex,
   PLATFORMS,
   resolveShort,
@@ -109,7 +110,8 @@ export function ClipStudio({
       ...preview,
       shorts: drafts.map((d) => {
         const { startSec: _a, endSec: _b, ...rest } = d;
-        return { ...rest, hook: d.hook ?? null, ...timesOf(d) };
+        const t = timesOf(d);
+        return { ...rest, hook: d.hook === undefined ? autoHook(words, t.start, t.end) : d.hook, hookAuto: d.hook === undefined, ...t };
       }),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -136,7 +138,6 @@ export function ClipStudio({
       cueEnd: phrase(Math.max(c.firstWord, c.lastWord - 3), c.lastWord),
       startSec: c.start,
       endSec: c.end,
-      hook: c.hook,
     };
     setDrafts((ds) => [...ds, s]);
     setSelected(id);
@@ -274,7 +275,7 @@ export function ClipStudio({
                           {fmt(dt.start)} · {len(dt.start, dt.end)}
                         </span>
                       </div>
-                      <div className="mt-0.5 truncate text-xs text-muted">{d.hook || d.cueStart}</div>
+                      <div className="mt-0.5 truncate text-xs text-muted">{(d.hook === undefined ? autoHook(words, dt.start, dt.end) : d.hook) || d.cueStart}</div>
                       {job && (
                         <div className={`mt-1 text-xs ${job.status === "failed" ? "text-danger" : job.status === "succeeded" ? "text-ok" : "text-teal"}`}>
                           {job.status === "running" ? `rendering ${Math.round(job.progress * 100)}%` : job.status === "succeeded" ? `rendered ${timeAgo(job.finished_at ?? job.created_at)}` : job.status}
@@ -377,10 +378,27 @@ export function ClipStudio({
             </section>
 
             <section>
-              <label className={label} htmlFor="hook">
-                Hook (first 3 seconds, optional)
-              </label>
-              <input id="hook" value={current.hook ?? ""} onChange={(e) => update({ hook: e.target.value || null })} className={input} placeholder="e.g. Twenty days short of sixty" />
+              <div className="flex items-baseline justify-between gap-2">
+                <label className={label} htmlFor="hook">
+                  Hook (first 3 seconds)
+                </label>
+                <span className="text-xs text-muted">
+                  {current.hook === undefined ? (
+                    "automatic, picked from the clip"
+                  ) : (
+                    <button onClick={() => update({ hook: undefined })} className="text-amber hover:underline">
+                      Use automatic
+                    </button>
+                  )}
+                </span>
+              </div>
+              <input
+                id="hook"
+                value={current.hook === undefined ? (autoHook(words, t.start, t.end) ?? "") : (current.hook ?? "")}
+                onChange={(e) => update({ hook: e.target.value || null })}
+                className={`${input} ${current.hook === undefined ? "text-muted" : ""}`}
+                placeholder="No hook. Type one, or use automatic."
+              />
               <RuleNotes text={current.hook} />
             </section>
 

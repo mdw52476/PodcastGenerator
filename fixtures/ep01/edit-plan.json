@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.3",
+  "schemaVersion": "0.4",
   "show": "the-shoebox-files",
   "episode": {
     "id": "ep01-test",
@@ -462,32 +462,27 @@
     {
       "id": "short1",
       "cueStart": "It's May 22, 1981",
-      "cueEnd": "for the next forty-five years.",
-      "hook": null
+      "cueEnd": "for the next forty-five years."
     },
     {
       "id": "short2",
       "cueStart": "The state police put the date",
-      "cueEnd": "would have turned sixty.",
-      "hook": null
+      "cueEnd": "would have turned sixty."
     },
     {
       "id": "short3",
       "cueStart": "Investigators did what they could",
-      "cueEnd": "set them side by side.",
-      "hook": null
+      "cueEnd": "set them side by side."
     },
     {
       "id": "short4",
       "cueStart": "It's April of 2026",
-      "cueEnd": "point to one name.",
-      "hook": null
+      "cueEnd": "point to one name."
     },
     {
       "id": "short5",
       "cueStart": "Now, here's what nobody can tell you",
-      "cueEnd": "right where they belong.",
-      "hook": null
+      "cueEnd": "right where they belong."
     }
   ],
   "shortsDefaults": {

@@ -174,12 +174,29 @@ export function scoreClip(sents: Sentence[], a: number, b: number): ClipScore {
 
 /** A short sentence from inside the clip that could sit on screen as the hook, if it passes the text rules. */
 export function suggestHook(sents: Sentence[], a: number, b: number): string | null {
-  const candidates = sents
-    .slice(a, b + 1)
+  // A hook teases what's coming, so skip the opening line: Walt is saying it at that moment anyway.
+  const pull = (s: Sentence) =>
+    2 * Number(STRONG.test(s.text)) +
+    Number(/\d/.test(s.text)) +
+    Number(/\s[A-Z][a-z]+/.test(s.text)) +
+    Number(s.text.trim().endsWith("?"));
+  // Whole short sentences, plus the clauses of longer ones ("...real ones, and one of them is ours"
+  // gives "One of them is ours").
+  const pieces: Sentence[] = [];
+  for (const s of sents.slice(a + 1, b + 1)) {
+    pieces.push(s);
+    const clauses = s.text.split(/,\s+/);
+    if (clauses.length > 1)
+      for (const c of clauses.slice(1)) {
+        const t = c.replace(/^(and|but|so|then|while)\s+/i, "");
+        pieces.push({ ...s, text: t.charAt(0).toUpperCase() + t.slice(1), first: 0, last: t.split(/\s+/).length - 1 });
+      }
+  }
+  const candidates = pieces
     .filter((s) => s.last - s.first + 1 <= 9 && s.last - s.first + 1 >= 3)
-    .sort((x, y) => Number(STRONG.test(y.text)) - Number(STRONG.test(x.text)) || x.text.length - y.text.length);
+    .sort((x, y) => pull(y) - pull(x) || x.text.length - y.text.length);
   for (const c of candidates) {
-    const text = c.text.replace(/[.!]+$/, "");
+    const text = c.text.replace(/[.!,;:]+$/, "");
     if (!checkText(text).some((v) => v.severity === "error")) return text;
   }
   return null;
@@ -235,4 +252,15 @@ export function scoreWindow(words: WordTiming[], start: number, end: number): Cl
     if (s.start < end - 0.05) b = i;
   });
   return a >= 0 && b >= a ? scoreClip(sents, a, b) : null;
+}
+
+/** The automatic hook for a window on the episode timeline (used when a short has no hook set). */
+export function autoHook(words: WordTiming[], start: number, end: number): string | null {
+  const sents = sentencesOf(words);
+  const a = sents.findIndex((x) => x.end > start + 0.05);
+  let b = -1;
+  sents.forEach((x, i) => {
+    if (x.start < end - 0.05) b = i;
+  });
+  return a >= 0 && b >= a ? suggestHook(sents, a, b) : null;
 }

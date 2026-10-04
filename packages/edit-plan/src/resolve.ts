@@ -1,6 +1,7 @@
 import { checkText, type Violation } from "@shoebox/text-rules";
 import { chunkCaptions, type CaptionPage } from "./captions";
 import { CueIndex } from "./cues";
+import { autoHook } from "./shorts";
 import type { EditPlan, Motion, MusicItem, Platform, Short, WordTiming } from "./schema";
 
 /**
@@ -44,7 +45,7 @@ export interface ResolvedPlan {
   /** Merged spans where Walt is speaking; music ducks inside these. */
   voiceSpans: Array<[number, number]>;
   shorts: Array<
-    Omit<Short, "cueStart" | "cueEnd" | "startSec" | "endSec"> & { start: number; end: number; cueStart: string; cueEnd: string }
+    Omit<Short, "cueStart" | "cueEnd" | "startSec" | "endSec"> & { start: number; end: number; cueStart: string; cueEnd: string; hookAuto?: boolean }
   >;
   shortsDefaults: { endCardText: string; platform: Platform };
   /** Script words with times; shorts re-chunk captions for the narrow frame from these. */
@@ -190,7 +191,10 @@ export function resolvePlan(plan: EditPlan, words: WordTiming[], opts: ResolveOp
         issues.push({ level: "error", where: `${where}.${field}`, message: `text rules: ${v.map((x) => x.message).join("; ")}`, violations: v });
     }
     const { startSec: _s, endSec: _e, ...rest } = s;
-    return { ...rest, hook: s.hook ?? null, start, end };
+    // Absent hook: pick one from the clip (already rule-checked). null: deliberately none.
+    const hookAuto = s.hook === undefined;
+    const hook = hookAuto ? (Number.isFinite(start) && Number.isFinite(end) ? autoHook(words, start, end) : null) : s.hook;
+    return { ...rest, hook, hookAuto, start, end };
   });
 
   if (plan.shortsDefaults) {
