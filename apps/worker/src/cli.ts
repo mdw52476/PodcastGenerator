@@ -1,4 +1,4 @@
-// pnpm job submit --plan fixtures/ep01/edit-plan.json [--prepare | --short short1 | --frames 0-899] [--strict] [--no-labels] [--no-proxy] [--no-dropbox] [--watch]
+// pnpm job submit --plan fixtures/ep01/edit-plan.json [--prepare | --short short1 | --frames 0-899] [--replace-shorts] [--strict] [--no-labels] [--no-proxy] [--no-dropbox] [--watch]
 // pnpm job watch [job-id]      (latest job if no id)
 // pnpm job list
 import { createHash } from "node:crypto";
@@ -47,10 +47,22 @@ async function submit() {
     assets[rel] = key;
   }
 
-  const { error: epErr } = await db()
-    .from("episodes")
-    .upsert({ id: plan.episode.id, show: plan.show, title: plan.episode.title, status: plan.episode.status, plan: raw });
-  if (epErr) throw new Error(`saving episode: ${epErr.message}`);
+  // New episode: store the plan as-is. Existing episode: the web app owns its stage
+  // and shorts, so keep those and take everything else from the file
+  // (pass --replace-shorts to use the file's shorts instead).
+  const { data: existing, error: getErr } = await db().from("episodes").select("plan").eq("id", plan.episode.id).maybeSingle();
+  if (getErr) throw new Error(`reading episode: ${getErr.message}`);
+  if (existing) {
+    const keepShorts = args["replace-shorts"] !== true && Array.isArray(existing.plan?.shorts);
+    if (keepShorts) raw.shorts = existing.plan.shorts;
+    const { error } = await db().from("episodes").update({ show: plan.show, title: plan.episode.title, plan: raw }).eq("id", plan.episode.id);
+    if (error) throw new Error(`saving episode: ${error.message}`);
+    console.log(`  updated episode ${plan.episode.id} (stage unchanged${keepShorts ? ", shorts kept from the web app" : ""})`);
+  } else {
+    const { error } = await db().from("episodes").insert({ id: plan.episode.id, show: plan.show, title: plan.episode.title, status: plan.episode.status, plan: raw });
+    if (error) throw new Error(`saving episode: ${error.message}`);
+    console.log(`  created episode ${plan.episode.id}`);
+  }
 
   const frames = typeof args.frames === "string" ? (args.frames.split("-").map(Number) as [number, number]) : undefined;
   const { data, error } = await db()

@@ -2,7 +2,7 @@
 
 Renders story-podcast episodes from a JSON edit plan. See `BUILD_SPEC.md` for the full design and `CLAUDE.md` for working rules.
 
-**Status:** Phase 3 (local web app: board, preview, approve). Rendering runs on Railway; data and files on Supabase; copies to Dropbox.
+**Status:** Phase 4 (clipping studio for vertical shorts) on top of the local web app (board, preview, approve). Rendering runs on Railway; data and files on Supabase; copies to Dropbox.
 
 ## One-time setup (Windows)
 
@@ -54,6 +54,7 @@ Then open **http://localhost:3000** (use `localhost`, not `127.0.0.1`, or the si
 - **Board:** episodes in columns by stage. Click a card to open it.
 - **Episode page:** live preview (the same composition the worker renders), stage picker, Approve / Request changes / notes, render buttons with progress and download links, history.
 - **Refresh preview** rebuilds the preview bundle on Railway (~2 min). Full renders refresh it too.
+- **Clipping studio** (button under the preview): vertical shorts. Pick a short or add one from the scored suggestions; trim by clicking the first and last words; set a hook, platform, per-shot crop, title, description and hashtags (all checked against the text rules); **Save**, then **Render** one or tick several and **Render selected**. Each short takes ~3 min on Railway and lands in `renders/<episode>/shorts/` and Dropbox `<show>/<episode>/shorts/`.
 - Owner account: `pnpm owner:add <email>` (already done for mdw52476@gmail.com).
 
 ## Rendering in the cloud (Phase 2)
@@ -64,6 +65,11 @@ Your laptop only uploads inputs and queues the job; Railway renders it.
 |---|---|
 | Render an episode on Railway | `pnpm job submit --plan fixtures/ep01/edit-plan.json --watch` |
 | Quick cloud test (2 s) | `pnpm job submit --plan fixtures/ep01/edit-plan.json --frames 2400-2459 --watch` |
+| Render one short on Railway | `pnpm job submit --plan fixtures/ep01/edit-plan.json --short short2 --watch` |
+| Render one short on this laptop | `pnpm render --plan fixtures/ep01/edit-plan.json --short short2` |
+| Rebuild the browser preview | `pnpm job submit --plan fixtures/ep01/edit-plan.json --prepare --watch` |
+
+`pnpm job submit` on an existing episode updates its plan but keeps the stage and the shorts you edited in the web app (add `--replace-shorts` to take the file's shorts instead).
 | Follow the latest job | `pnpm job watch` |
 | Recent jobs | `pnpm job list` |
 | Skip the Dropbox copy | add `--no-dropbox` |
