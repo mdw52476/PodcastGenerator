@@ -53,7 +53,10 @@ export function resolveShort(plan: ResolvedPlan, shortId: string, opts: { placeh
   const start = Math.max(0, s.start - SHORT_PRE_ROLL);
   const end = Math.min(plan.durationSec, s.end + SHORT_POST_ROLL);
   const preset = PLATFORMS[s.platform ?? plan.shortsDefaults.platform];
-  const inRange = plan.words.filter((w) => w.start >= start - 0.01 && w.end <= end + 0.01);
+  const fixes = plan.captions.overrides ?? {};
+  const inRange = plan.words
+    .map((w, i) => (fixes[i] ? { ...w, word: fixes[i] } : w))
+    .filter((w) => w.start >= start - 0.01 && w.end <= end + 0.01);
   // Narrow frame: fewer characters per line; bigger type.
   const captions = chunkCaptions(inRange, {}, { maxLines: 2, maxCharsPerLine: 22, pauseSec: 0.6 });
   return {

@@ -54,15 +54,16 @@ export async function addNote(episodeId: string, note: string) {
 export async function queueJob(episodeId: string, kind: "episode" | "preview" | "prepare") {
   const supabase = await supabaseServer();
   const [{ data: ep, error: e1 }, { data: last, error: e2 }] = await Promise.all([
-    supabase.from("episodes").select("plan").eq("id", episodeId).single(),
+    supabase.from("episodes").select("plan, assets").eq("id", episodeId).single(),
     supabase.from("render_jobs").select("assets").eq("episode_id", episodeId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
   ]);
   if (e1 || e2) throw new Error((e1 ?? e2)!.message);
-  if (!ep?.plan || !last?.assets) throw new Error("This episode's files have not been uploaded yet. Submit it once with `pnpm job submit`.");
+  const assets = { ...(last?.assets ?? {}), ...(ep?.assets ?? {}) };
+  if (!ep?.plan || !Object.keys(assets).length) throw new Error("This episode's files have not been uploaded yet. Submit it once with `pnpm job submit`.");
 
   // Quick test: 10 seconds from the opener, where titles, captions and music all show.
   const options = kind === "preview" ? { frames: [1230, 1529] } : {};
-  const { error } = await supabase.from("render_jobs").insert({ episode_id: episodeId, kind, plan: ep.plan, assets: last.assets, options });
+  const { error } = await supabase.from("render_jobs").insert({ episode_id: episodeId, kind, plan: ep.plan, assets, options });
   if (error) throw new Error(error.message);
   revalidatePath(`/episodes/${episodeId}`);
 }

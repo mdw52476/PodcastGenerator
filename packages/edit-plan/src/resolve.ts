@@ -30,7 +30,14 @@ export interface ResolvedPlan {
     prompt?: string;
   }>;
   text: Array<{ type: string; text: string; start: number; end: number }>;
-  captions: { enabled: boolean; color: string; highlightColor: string; pages: CaptionPage[] };
+  captions: {
+    enabled: boolean;
+    color: string;
+    highlightColor: string;
+    pages: CaptionPage[];
+    /** Display-text fixes keyed by word index (the captions panel writes these). */
+    overrides: Record<string, string>;
+  };
   music: Array<{
     track: string;
     src: string;
@@ -48,7 +55,7 @@ export interface ResolvedPlan {
     Omit<Short, "cueStart" | "cueEnd" | "startSec" | "endSec"> & { start: number; end: number; cueStart: string; cueEnd: string; hookAuto?: boolean }
   >;
   shortsDefaults: { endCardText: string; platform: Platform };
-  /** Script words with times; shorts re-chunk captions for the narrow frame from these. */
+  /** Script words with times (as written); shorts re-chunk captions from these plus captions.overrides. */
   words: WordTiming[];
 }
 
@@ -227,6 +234,7 @@ export function resolvePlan(plan: EditPlan, words: WordTiming[], opts: ResolveOp
       color: plan.captions.color,
       highlightColor: plan.captions.highlightColor,
       pages: chunkCaptions(words, overrides, { maxLines: plan.captions.maxLines }),
+      overrides,
     },
     music,
     voiceSpans: voiceSpans(words),
@@ -235,7 +243,8 @@ export function resolvePlan(plan: EditPlan, words: WordTiming[], opts: ResolveOp
       endCardText: plan.shortsDefaults?.endCardText ?? "Full story on the channel",
       platform: plan.shortsDefaults?.platform ?? "youtube_shorts",
     },
-    words: words.map((w, i) => (overrides[i] ? { ...w, word: overrides[i] } : w)),
+    // Original script words; captions.overrides holds any display fixes.
+    words,
   };
   return { resolved, issues };
 }

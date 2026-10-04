@@ -17,7 +17,7 @@ const EMPTY: ResolvedPlan = {
   crossfadeSec: 0.5,
   shots: [{ id: "s01", index: 0, start: 0, end: 5, motion: "push_in", src: null, mediaType: "image", shotType: "wide", prompt: "empty plan" }],
   text: [],
-  captions: { enabled: false, color: "#fff", highlightColor: "#E8A33D", pages: [] },
+  captions: { enabled: false, color: "#fff", highlightColor: "#E8A33D", pages: [], overrides: {} },
   music: [],
   voiceSpans: [],
   shorts: [{ id: "empty", cueStart: "", cueEnd: "", start: 0, end: 5, hook: null }],

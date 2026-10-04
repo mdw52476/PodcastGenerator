@@ -141,3 +141,15 @@ describe("clip suggestions", () => {
     expect(s.standsAlone).toBeLessThan(0.5);
   });
 });
+
+describe("caption fixes", () => {
+  it("reach the shorts' captions", () => {
+    const p2 = structuredClone(plan);
+    const i = words.findIndex((w) => w.word === "sixty.");
+    p2.captions.overrides = { [i]: "60." };
+    const r = resolvePlan(p2, words, { allowPlaceholders: true }).resolved;
+    expect(r.words[i].word).toBe("sixty."); // script words stay as written
+    const text = resolveShort(r, "short2").captions.flatMap((c) => c.lines.flat().map((w) => w.text)).join(" ");
+    expect(text).toContain("would have turned 60.");
+  });
+});

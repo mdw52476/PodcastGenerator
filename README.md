@@ -2,7 +2,7 @@
 
 Renders story-podcast episodes from a JSON edit plan. See `BUILD_SPEC.md` for the full design and `CLAUDE.md` for working rules.
 
-**Status:** Phase 4 (clipping studio for vertical shorts) on top of the local web app (board, preview, approve). Rendering runs on Railway; data and files on Supabase; copies to Dropbox.
+**Status:** Phase 5 (timeline editing + captions panel) on top of the local web app (board, preview, approve, clipping studio). Rendering runs on Railway; data and files on Supabase; copies to Dropbox.
 
 ## One-time setup (Windows)
 
@@ -54,6 +54,7 @@ Then open **http://localhost:3000** (use `localhost`, not `127.0.0.1`, or the si
 - **Board:** episodes in columns by stage. Click a card to open it.
 - **Episode page:** live preview (the same composition the worker renders), stage picker, Approve / Request changes / notes, render buttons with progress and download links, history.
 - **Refresh preview** rebuilds the preview bundle on Railway (~2 min). Full renders refresh it too.
+- **Edit timeline** (button under the preview): the episode on a timeline. Voice waveform with word markers; lanes for shots, text cards, captions and music. Drag a shot's left edge to move the cut, drag text cards (or their right edge), drag music edges; everything snaps to word starts. Click a block to edit it on the right: shot camera move and picture (upload a JPG/PNG/WebP, pick an earlier upload, or go back to the placeholder), card text (text-rule checked), music fades / level / dip under the voice. The **Captions** tab fixes how any word displays (optionally every time it appears). Ctrl+Z / Ctrl+Y undo and redo. **Save** checks the plan and stores it; **Save & refresh preview** also rebuilds the preview's music on Railway (needed after moving music edges). Render from the episode page as usual.
 - **Clipping studio** (button under the preview): vertical shorts. Pick a short or add one from the scored suggestions; trim by clicking the first and last words; set a hook, platform, per-shot crop, title, description and hashtags (all checked against the text rules); **Save**, then **Render** one or tick several and **Render selected**. Each short takes ~3 min on Railway and lands in `renders/<episode>/shorts/` and Dropbox `<show>/<episode>/shorts/`.
 - Owner account: `pnpm owner:add <email>` (already done for mdw52476@gmail.com).
 
@@ -69,7 +70,7 @@ Your laptop only uploads inputs and queues the job; Railway renders it.
 | Render one short on this laptop | `pnpm render --plan fixtures/ep01/edit-plan.json --short short2` |
 | Rebuild the browser preview | `pnpm job submit --plan fixtures/ep01/edit-plan.json --prepare --watch` |
 
-`pnpm job submit` on an existing episode updates its plan but keeps the stage and the shorts you edited in the web app (add `--replace-shorts` to take the file's shorts instead).
+`pnpm job submit` on an existing episode updates its plan but keeps the stage and everything edited in the web app: shorts, shot timing/motion/images, text cards, music cues and caption fixes. Add `--replace-shorts` or `--replace-edits` to take those from the file instead.
 | Follow the latest job | `pnpm job watch` |
 | Recent jobs | `pnpm job list` |
 | Skip the Dropbox copy | add `--no-dropbox` |

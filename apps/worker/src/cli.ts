@@ -1,4 +1,4 @@
-// pnpm job submit --plan fixtures/ep01/edit-plan.json [--prepare | --short short1 | --frames 0-899] [--replace-shorts] [--strict] [--no-labels] [--no-proxy] [--no-dropbox] [--watch]
+// pnpm job submit --plan fixtures/ep01/edit-plan.json [--prepare | --short short1 | --frames 0-899] [--replace-shorts] [--replace-edits] [--strict] [--no-labels] [--no-proxy] [--no-dropbox] [--watch]
 // pnpm job watch [job-id]      (latest job if no id)
 // pnpm job list
 import { createHash } from "node:crypto";
@@ -17,6 +17,17 @@ const CONTENT_TYPES: Record<string, string> = {
   ".webp": "image/webp", ".mp4": "video/mp4", ".mov": "video/quicktime",
 };
 const typeOf = (p: string) => CONTENT_TYPES[p.slice(p.lastIndexOf(".")).toLowerCase()] ?? "application/octet-stream";
+
+/**
+ * Timeline edits made in the web app (shot timing/motion/images, text cards, music
+ * cues, caption fixes) live in the stored plan. Carry them over a re-submitted file
+ * unless --replace-edits is passed.
+ */
+function keepWebEdits(raw: any, stored: any) {
+  if (!stored) return;
+  for (const key of ["shots", "text", "music"] as const) if (Array.isArray(stored[key])) raw[key] = stored[key];
+  if (stored.captions?.overrides) raw.captions = { ...raw.captions, overrides: stored.captions.overrides };
+}
 
 async function submit() {
   if (typeof args.plan !== "string") throw new Error("usage: pnpm job submit --plan <edit-plan.json>");
@@ -50,16 +61,19 @@ async function submit() {
   // New episode: store the plan as-is. Existing episode: the web app owns its stage
   // and shorts, so keep those and take everything else from the file
   // (pass --replace-shorts to use the file's shorts instead).
-  const { data: existing, error: getErr } = await db().from("episodes").select("plan").eq("id", plan.episode.id).maybeSingle();
+  const { data: existing, error: getErr } = await db().from("episodes").select("plan, assets").eq("id", plan.episode.id).maybeSingle();
   if (getErr) throw new Error(`reading episode: ${getErr.message}`);
   if (existing) {
     const keepShorts = args["replace-shorts"] !== true && Array.isArray(existing.plan?.shorts);
     if (keepShorts) raw.shorts = upgradePlan(existing.plan).shorts;
-    const { error } = await db().from("episodes").update({ show: plan.show, title: plan.episode.title, plan: raw }).eq("id", plan.episode.id);
+    // Keep the plan's image paths pointing at images uploaded in the web app.
+    Object.assign(assets, { ...(existing.assets ?? {}), ...assets });
+    if (args["replace-edits"] !== true) keepWebEdits(raw, upgradePlan(existing.plan));
+    const { error } = await db().from("episodes").update({ show: plan.show, title: plan.episode.title, plan: raw, assets }).eq("id", plan.episode.id);
     if (error) throw new Error(`saving episode: ${error.message}`);
     console.log(`  updated episode ${plan.episode.id} (stage unchanged${keepShorts ? ", shorts kept from the web app" : ""})`);
   } else {
-    const { error } = await db().from("episodes").insert({ id: plan.episode.id, show: plan.show, title: plan.episode.title, status: plan.episode.status, plan: raw });
+    const { error } = await db().from("episodes").insert({ id: plan.episode.id, show: plan.show, title: plan.episode.title, status: plan.episode.status, plan: raw, assets });
     if (error) throw new Error(`saving episode: ${error.message}`);
     console.log(`  created episode ${plan.episode.id}`);
   }

@@ -68,9 +68,14 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
               <p className="text-xs text-muted">
                 Preview plays the same composition the worker renders. Grain and fine detail look best in the downloaded 1080p file.
               </p>
-              <Link href={`/episodes/${encodeURIComponent(episode.id)}/clips`} className="rounded-md border border-line px-3 py-1.5 text-sm hover:border-amber/60">
-                Clipping studio
-              </Link>
+              <div className="flex gap-2">
+                <Link href={`/episodes/${encodeURIComponent(episode.id)}/edit`} className="rounded-md border border-line px-3 py-1.5 text-sm hover:border-amber/60">
+                  Edit timeline
+                </Link>
+                <Link href={`/episodes/${encodeURIComponent(episode.id)}/clips`} className="rounded-md border border-line px-3 py-1.5 text-sm hover:border-amber/60">
+                  Clipping studio
+                </Link>
+              </div>
             </div>
           </div>
 
