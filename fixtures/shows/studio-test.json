@@ -1,0 +1,26 @@
+{
+  "name": "Studio Test Show",
+  "narrator": { "name": "Sarah", "identity": "Placeholder narrator for testing a second show end to end." },
+  "voice": {
+    "voiceId": "EXAVITQu4vr4xnSDxMaL",
+    "voiceName": "Sarah - Mature, Reassuring, Confident",
+    "model": "eleven_multilingual_v2",
+    "stability": 0.45,
+    "similarity": 0.8,
+    "style": 0.1,
+    "speed": 1.0
+  },
+  "opener": "This is the Studio Test Show.",
+  "closer": "Thanks for listening to the Studio Test Show.",
+  "disclaimer": "",
+  "titleCard": "STUDIO TEST SHOW",
+  "disclosureText": "AI narration. A short invented test story.",
+  "look": { "tint": "cool", "saturation": 0.85, "contrast": 1.04, "vignette": 0.18, "grain": 0.06, "halation": 0.05 },
+  "captions": { "color": "#FFFFFF", "highlightColor": "#5FA8A8" },
+  "music": { "preset": "lighter", "seed": 3, "duckUnderVoiceDb": -14 },
+  "shorts": { "endCardText": "More on the Studio Test Show", "platform": "youtube_shorts", "count": 3 },
+  "platforms": ["youtube"],
+  "cadence": "as needed",
+  "targetMinutes": 1,
+  "neverShow": []
+}

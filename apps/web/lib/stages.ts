@@ -24,7 +24,7 @@ export interface EpisodeRow {
 export interface JobRow {
   id: string;
   episode_id: string;
-  kind: "episode" | "preview" | "prepare" | "short";
+  kind: "episode" | "preview" | "prepare" | "short" | "voice" | "revoice";
   options?: { shortId?: string; frames?: [number, number] } | null;
   status: "queued" | "running" | "succeeded" | "failed" | "cancelled";
   stage: string | null;
@@ -50,6 +50,8 @@ export const JOB_KIND_LABEL: Record<JobRow["kind"], string> = {
   preview: "Quick test",
   prepare: "Preview refresh",
   short: "Short",
+  voice: "Voice",
+  revoice: "Re-voice",
 };
 
 export const showLabel = (slug: string) => slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());

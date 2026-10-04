@@ -11,15 +11,18 @@ type Grade = ResolvedPlan["grade"];
 export function gradeTables(g: Grade, steps = 17) {
   const r: number[] = [], gr: number[] = [], b: number[] = [];
   const teal = g.tint.includes("teal") ? 1 : 0;
+  // Overall colour cast for the simpler looks: warm leans amber, cool leans blue.
+  const cast = g.tint === "warm" ? { r: 0.035, g: 0.012, b: -0.04 } : g.tint === "cool" ? { r: -0.03, g: 0.005, b: 0.04 } : { r: 0, g: 0, b: 0 };
   for (let i = 0; i < steps; i++) {
     const x = i / (steps - 1);
     // Contrast around mid-grey, softened at the ends so blacks stay a touch lifted (filmic).
     const c = Math.min(1, Math.max(0, 0.5 + (x - 0.5) * g.contrast)) * 0.96 + 0.025;
     const sh = (1 - x) ** 2 * teal; // shadow weight
     const hi = x ** 2 * teal; // highlight weight
-    r.push(c + 0.07 * hi - 0.05 * sh);
-    gr.push(c + 0.025 * hi + 0.015 * sh);
-    b.push(c - 0.07 * hi + 0.055 * sh);
+    const mid = 4 * x * (1 - x); // cast is strongest in the midtones
+    r.push(c + 0.07 * hi - 0.05 * sh + cast.r * mid);
+    gr.push(c + 0.025 * hi + 0.015 * sh + cast.g * mid);
+    b.push(c - 0.07 * hi + 0.055 * sh + cast.b * mid);
   }
   const fmt = (a: number[]) => a.map((v) => Math.min(1, Math.max(0, v)).toFixed(4)).join(" ");
   return { r: fmt(r), g: fmt(gr), b: fmt(b) };

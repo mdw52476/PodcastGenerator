@@ -14,7 +14,8 @@
     "dropbox-auth": "tsx apps/worker/src/dropbox-auth.ts",
     "web": "pnpm --filter @shoebox/web dev",
     "web:build": "pnpm --filter @shoebox/web build",
-    "owner:add": "tsx apps/worker/src/owner.ts"
+    "owner:add": "tsx apps/worker/src/owner.ts",
+    "shows:seed": "tsx apps/worker/src/seed-shows.ts"
   },
   "devDependencies": {
     "@types/node": "^24",

@@ -14,7 +14,15 @@ export function Header({ crumb }: { crumb?: string }) {
             <span className="truncate text-muted">{crumb}</span>
           </>
         )}
-        <form action={signOut} className="ml-auto">
+        <nav className="ml-auto flex items-center gap-1 text-sm">
+          <Link href="/" className="rounded-md px-3 py-1.5 text-muted hover:bg-raised hover:text-text">
+            Board
+          </Link>
+          <Link href="/shows" className="rounded-md px-3 py-1.5 text-muted hover:bg-raised hover:text-text">
+            Shows
+          </Link>
+        </nav>
+        <form action={signOut}>
           <button className="rounded-md px-3 py-1.5 text-sm text-muted hover:bg-raised hover:text-text">Sign out</button>
         </form>
       </div>

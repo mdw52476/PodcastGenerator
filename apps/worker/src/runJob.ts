@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { exportPreviewBundle, PlanError, prepareEpisode, renderEpisode, renderShort, type Prepared, type RenderEvent } from "@shoebox/engine/pipeline";
 import { dropboxConfigured, dropboxUpload } from "./dropbox";
+import { revoice, voiceNew } from "./voice";
 import { BUCKET, optional } from "./env";
 import { db, downloadFile, signedUrl, uploadFile, type RenderJob } from "./supabase";
 
@@ -47,6 +48,19 @@ export async function runJob(job: RenderJob): Promise<void> {
         void update(job, { stage: e.stage, progress: e.progress, heartbeat_at: new Date().toISOString() });
       }
     };
+
+    // Voice jobs: make or update the narration (ElevenLabs), then refresh the preview.
+    if (job.kind === "voice" || job.kind === "revoice") {
+      await update(job, { stage: "voice", progress: 0.05, heartbeat_at: new Date().toISOString() });
+      const v = job.kind === "voice" ? await voiceNew(job, inputDir, (m) => log(job, m)) : await revoice(job, inputDir, (m) => log(job, m));
+      await update(job, { stage: "music", progress: 0.6, heartbeat_at: new Date().toISOString() });
+      const prepared = await prepareEpisode({ planPath: v.planPath, outDir: join(dir, "out"), strict: false, labels: true, cacheDir: optional("MUSIC_CACHE_DIR"), onEvent });
+      await update(job, { stage: "upload", progress: 0.9, heartbeat_at: new Date().toISOString() });
+      const preview = await uploadPreviewBundle(job, prepared, join(dir, "bundle"));
+      await update(job, { status: "succeeded", stage: "done", progress: 1, outputs: { ...v.outputs, preview }, finished_at: new Date().toISOString() });
+      log(job, `${job.kind} done`);
+      return;
+    }
 
     // Preview-only job: no video, just the bundle the browser player loads.
     if (job.kind === "prepare") {
@@ -115,7 +129,8 @@ export async function runJob(job: RenderJob): Promise<void> {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     // A bad plan will fail the same way every time, so don't retry it.
-    const retry = !(err instanceof PlanError) && job.attempts < 2;
+    // Voice jobs never retry on their own: a retry would spend the characters again.
+    const retry = !(err instanceof PlanError) && job.attempts < 2 && job.kind !== "voice" && job.kind !== "revoice";
     console.error(`[job ${job.id.slice(0, 8)}] ${retry ? "failed, will retry" : "failed"}: ${message}`);
     await update(job, {
       status: retry ? "queued" : "failed",

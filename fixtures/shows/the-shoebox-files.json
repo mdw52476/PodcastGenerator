@@ -1,0 +1,29 @@
+{
+  "name": "The Shoebox Files",
+  "narrator": {
+    "name": "Walt Harlan",
+    "identity": "A retired small-town Iowa newspaper reporter in his late 60s who kept the stories nobody finished in a shoebox under his desk. A fictional narrator, not a party to any case."
+  },
+  "voice": {
+    "voiceId": "pqHfZKP75CvOlQylNhV4",
+    "voiceName": "Bill - Wise, Mature, Balanced",
+    "model": "eleven_multilingual_v2",
+    "stability": 0.35,
+    "similarity": 0.8,
+    "style": 0.2,
+    "speed": 0.88
+  },
+  "opener": "This is The Shoebox Files. I'm Walt Harlan. I spent thirty-some years at a small paper in Iowa, and I kept the stories nobody finished in a shoebox under my desk. Pull up a chair.",
+  "closer": "That's the file for now. I'll put it back in the shoebox, but I'll keep the lid loose. This has been The Shoebox Files. I'm Walt Harlan. Goodnight.",
+  "disclaimer": "This story is based on real events and public records. I'm a fictional narrator, and some scenes are dramatized. Where the facts are disputed, I'll tell you.",
+  "titleCard": "THE SHOEBOX FILES",
+  "disclosureText": "AI narration. Based on real events and public records.",
+  "look": { "tint": "teal-shadows-amber-highlights", "saturation": 0.7, "contrast": 1.08, "vignette": 0.25, "grain": 0.12, "halation": 0.1 },
+  "captions": { "color": "#FFFFFF", "highlightColor": "#E8A33D" },
+  "music": { "preset": "dark", "seed": 7, "duckUnderVoiceDb": -16 },
+  "shorts": { "endCardText": "Full story on The Shoebox Files", "platform": "youtube_shorts", "count": 10 },
+  "platforms": ["youtube", "youtube_shorts"],
+  "cadence": "weekly",
+  "targetMinutes": 15,
+  "neverShow": ["bodies", "blood", "wounds", "weapons in use", "identifiable real people", "real logos or police insignia", "children in peril"]
+}

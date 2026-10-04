@@ -4,3 +4,5 @@ export * from "./captions";
 export * from "./resolve";
 export * from "./audio";
 export * from "./shorts";
+export * from "./script";
+export * from "./shows";
