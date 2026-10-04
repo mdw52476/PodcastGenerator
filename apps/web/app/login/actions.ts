@@ -13,7 +13,8 @@ export async function sendLink(form: FormData) {
     email,
     options: { shouldCreateUser: false, emailRedirectTo: `${origin}/auth/callback` },
   });
-  if (error && error.status === 429) redirect(`/login?error=${encodeURIComponent("Too many requests. Wait a minute and try again.")}`);
+  if (error && error.status === 429)
+    redirect(`/login?error=${encodeURIComponent("Supabase allows one link per minute. Wait a minute, then request again (or use the link already in your inbox).")}`);
   // Same message either way, so the page never reveals which emails have accounts.
   redirect("/login?sent=1");
 }
