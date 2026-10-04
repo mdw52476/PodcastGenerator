@@ -6,8 +6,10 @@ import { z } from "zod";
  *
  * 0.2: narration.wordTimingsFile (sidecar JSON from packages/align),
  *      music[].levelDb, visual.src may be null (placeholder in non-strict renders).
+ * 0.3: shorts[] gain startSec/endSec overrides (word-snapped by the UI), platform,
+ *      title/description/hashtags, crops as { x } per shot; shortsDefaults.
  */
-export const SCHEMA_VERSION = "0.2";
+export const SCHEMA_VERSION = "0.3";
 
 export const WordTiming = z.object({
   word: z.string(),
@@ -77,6 +79,30 @@ export const MusicItem = z.object({
 });
 export type MusicItem = z.infer<typeof MusicItem>;
 
+export const Platform = z.enum(["youtube_shorts", "tiktok", "reels"]);
+export type Platform = z.infer<typeof Platform>;
+
+/**
+ * A vertical clip. Cues anchor it to the script; startSec/endSec (written by the
+ * clip editor, already snapped to word edges) override the cues.
+ */
+export const Short = z.object({
+  id: z.string(),
+  cueStart: z.string(),
+  cueEnd: z.string(),
+  startSec: z.number().nonnegative().optional(),
+  endSec: z.number().positive().optional(),
+  /** On-screen line for the first seconds. Must pass the text rules. */
+  hook: z.string().nullable().optional(),
+  /** Horizontal crop centre per shot id, 0 = left edge, 0.5 = centre, 1 = right edge. */
+  crops: z.record(z.string(), z.object({ x: z.number().min(0).max(1) })).optional(),
+  platform: Platform.optional(),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  hashtags: z.array(z.string()).optional(),
+});
+export type Short = z.infer<typeof Short>;
+
 export const EditPlan = z.object({
   schemaVersion: z.literal(SCHEMA_VERSION),
   show: z.string(),
@@ -122,14 +148,31 @@ export const EditPlan = z.object({
   }),
   music: z.array(MusicItem),
   sfx: z.array(z.object({ src: z.string(), cue: z.string().optional(), startSec: z.number().optional(), gainDb: z.number().optional() })).optional(),
-  shorts: z.array(
-    z.object({
-      id: z.string(),
-      cueStart: z.string(),
-      cueEnd: z.string(),
-      hook: z.string().nullable().optional(),
-      crops: z.record(z.string(), z.object({ x: z.number(), y: z.number() })).optional(),
-    }),
-  ),
+  shorts: z.array(Short),
+  shortsDefaults: z
+    .object({
+      /** Shown for the last seconds of every short. */
+      endCardText: z.string(),
+      platform: Platform.default("youtube_shorts"),
+    })
+    .optional(),
 });
 export type EditPlan = z.infer<typeof EditPlan>;
+
+/**
+ * Bring a stored plan up to SCHEMA_VERSION before parsing. Every version bump
+ * so far only added optional fields, so older plans upgrade by relabelling.
+ */
+export function upgradePlan(raw: any): any {
+  if (!raw || typeof raw !== "object") return raw;
+  const plan = structuredClone(raw);
+  if (plan.schemaVersion === "0.1") {
+    if (plan.narration?.wordTimings === null) delete plan.narration.wordTimings;
+    plan.schemaVersion = "0.2";
+  }
+  if (plan.schemaVersion === "0.2") plan.schemaVersion = "0.3";
+  return plan;
+}
+
+/** Upgrade, then validate. */
+export const parsePlan = (raw: unknown) => EditPlan.safeParse(upgradePlan(raw));

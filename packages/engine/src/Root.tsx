@@ -1,7 +1,8 @@
 import React from "react";
 import { Composition } from "remotion";
-import type { ResolvedPlan } from "@shoebox/edit-plan";
+import { resolveShort, type ResolvedPlan, type ShortProps } from "@shoebox/edit-plan";
 import { Episode, type EpisodeProps } from "./Episode";
+import { Short } from "./Short";
 
 // Minimal stand-in so Remotion Studio opens without props; real plans arrive via --props.
 const EMPTY: ResolvedPlan = {
@@ -19,19 +20,34 @@ const EMPTY: ResolvedPlan = {
   captions: { enabled: false, color: "#fff", highlightColor: "#E8A33D", pages: [] },
   music: [],
   voiceSpans: [],
-  shorts: [],
+  shorts: [{ id: "empty", cueStart: "", cueEnd: "", start: 0, end: 5, hook: null }],
+  shortsDefaults: { endCardText: "", platform: "youtube_shorts" },
+  words: [],
 };
 
 export const Root: React.FC = () => (
-  <Composition
-    id="Episode"
-    component={Episode}
-    defaultProps={{ plan: EMPTY, placeholderLabels: true } satisfies EpisodeProps}
-    calculateMetadata={({ props }) => ({
-      durationInFrames: Math.ceil(props.plan.durationSec * props.plan.fps),
-      fps: props.plan.fps,
-      width: props.plan.width,
-      height: props.plan.height,
-    })}
-  />
+  <>
+    <Composition
+      id="Episode"
+      component={Episode}
+      defaultProps={{ plan: EMPTY, placeholderLabels: true } satisfies EpisodeProps}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: Math.ceil(props.plan.durationSec * props.plan.fps),
+        fps: props.plan.fps,
+        width: props.plan.width,
+        height: props.plan.height,
+      })}
+    />
+    <Composition
+      id="Short"
+      component={Short}
+      defaultProps={resolveShort(EMPTY, "empty") satisfies ShortProps}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: Math.ceil(props.durationSec * props.plan.fps),
+        fps: props.plan.fps,
+        width: props.preset.width,
+        height: props.preset.height,
+      })}
+    />
+  </>
 );

@@ -24,6 +24,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./episode": "./src/Episode.tsx",
+    "./short": "./src/Short.tsx",
     "./pipeline": "./pipeline/index.ts"
   }
 }

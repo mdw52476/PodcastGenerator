@@ -45,7 +45,7 @@ export function RenderPanel({ episodeId, initialJobs }: { episodeId: string; ini
     const t = setInterval(async () => {
       const { data } = await supabaseBrowser()
         .from("render_jobs")
-        .select("id, episode_id, kind, status, stage, progress, outputs, error, created_at, finished_at")
+        .select("id, episode_id, kind, status, stage, progress, outputs, options, error, created_at, finished_at")
         .eq("episode_id", episodeId)
         .order("created_at", { ascending: false })
         .limit(8);
@@ -60,7 +60,7 @@ export function RenderPanel({ episodeId, initialJobs }: { episodeId: string; ini
 
   useEffect(() => setJobs(initialJobs), [initialJobs]);
 
-  const queue = (kind: JobRow["kind"]) =>
+  const queue = (kind: "episode" | "preview" | "prepare") =>
     start(async () => {
       setError(null);
       try {
@@ -93,7 +93,10 @@ export function RenderPanel({ episodeId, initialJobs }: { episodeId: string; ini
         {jobs.map((j) => (
           <li key={j.id} className="py-3">
             <div className="flex items-baseline justify-between gap-2 text-sm">
-              <span className="font-medium">{JOB_KIND_LABEL[j.kind]}</span>
+              <span className="font-medium">
+                {JOB_KIND_LABEL[j.kind]}
+                {j.options?.shortId ? `: ${j.options.shortId}` : ""}
+              </span>
               <span className="text-xs text-muted">{timeAgo(j.created_at)}</span>
             </div>
             {(j.status === "running" || j.status === "queued") && (
@@ -111,7 +114,7 @@ export function RenderPanel({ episodeId, initialJobs }: { episodeId: string; ini
               <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
                 {j.outputs?.master && (
                   <button onClick={() => download(j.outputs!.master!.key)} className="text-amber hover:underline">
-                    Download {j.kind === "episode" ? "1080p" : "clip"}
+                    Download {j.kind === "episode" ? "1080p" : j.kind === "short" ? "short" : "clip"}
                   </button>
                 )}
                 {j.outputs?.proxy && (

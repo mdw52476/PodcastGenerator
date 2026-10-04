@@ -10,10 +10,10 @@ import { BUCKET, need } from "./env";
 export interface RenderJob {
   id: string;
   episode_id: string;
-  kind: "episode" | "preview" | "prepare";
+  kind: "episode" | "preview" | "prepare" | "short";
   plan: Record<string, any>;
   assets: Record<string, string>;
-  options: { frames?: [number, number]; strict?: boolean; labels?: boolean; proxy?: boolean; dropbox?: boolean };
+  options: { frames?: [number, number]; strict?: boolean; labels?: boolean; proxy?: boolean; dropbox?: boolean; shortId?: string };
   status: "queued" | "running" | "succeeded" | "failed" | "cancelled";
   stage: string | null;
   progress: number;

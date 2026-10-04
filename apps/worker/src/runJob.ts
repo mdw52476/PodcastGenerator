@@ -1,7 +1,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
-import { exportPreviewBundle, PlanError, prepareEpisode, renderEpisode, type Prepared, type RenderEvent } from "@shoebox/engine/pipeline";
+import { exportPreviewBundle, PlanError, prepareEpisode, renderEpisode, renderShort, type Prepared, type RenderEvent } from "@shoebox/engine/pipeline";
 import { dropboxConfigured, dropboxUpload } from "./dropbox";
 import { BUCKET, optional } from "./env";
 import { db, downloadFile, signedUrl, uploadFile, type RenderJob } from "./supabase";
@@ -15,7 +15,8 @@ async function update(job: RenderJob, fields: Partial<RenderJob> & { heartbeat_a
 }
 
 /** Storage prefix for a job's outputs. Re-running a job (or the same kind for the same episode) overwrites. */
-export const outputPrefix = (job: RenderJob) => `renders/${job.episode_id}/${job.kind === "preview" ? "preview" : "episode"}`;
+export const outputPrefix = (job: RenderJob) =>
+  `renders/${job.episode_id}/${job.kind === "preview" ? "preview" : job.kind === "short" ? "shorts" : "episode"}`;
 
 export async function runJob(job: RenderJob): Promise<void> {
   const dir = join(WORK_DIR, job.id);
@@ -58,7 +59,7 @@ export async function runJob(job: RenderJob): Promise<void> {
     }
 
     // 2. render
-    const result = await renderEpisode({
+    const renderOpts = {
       planPath,
       outDir: join(dir, "out"),
       strict: job.options.strict === true,
@@ -68,7 +69,9 @@ export async function runJob(job: RenderJob): Promise<void> {
       concurrency: optional("RENDER_CONCURRENCY") ? Number(optional("RENDER_CONCURRENCY")) : undefined,
       cacheDir: optional("MUSIC_CACHE_DIR"),
       onEvent,
-    });
+    };
+    if (job.kind === "short" && !job.options.shortId) throw new PlanError("short job without options.shortId");
+    const result = job.kind === "short" ? await renderShort({ ...renderOpts, shortId: job.options.shortId! }) : await renderEpisode(renderOpts);
 
     // 3. upload outputs
     await update(job, { stage: "upload", progress: 0.99, heartbeat_at: new Date().toISOString() });
@@ -88,7 +91,8 @@ export async function runJob(job: RenderJob): Promise<void> {
 
     // 4. owner copy in Dropbox (App folder): /<show>/<episode>/[previews/]
     if (job.options.dropbox !== false && dropboxConfigured()) {
-      const base = `/${job.plan.show}/${job.episode_id}${job.kind === "preview" ? "/previews" : ""}`;
+      const sub = job.kind === "preview" ? "/previews" : job.kind === "short" ? "/shorts" : "";
+      const base = `/${job.plan.show}/${job.episode_id}${sub}`;
       outputs.dropbox = [];
       for (const [name, path] of files) {
         if (name === "report") continue;

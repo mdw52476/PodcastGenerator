@@ -14,12 +14,28 @@ function pageAt(pages: CaptionPage[], t: number): CaptionPage | undefined {
   return p && t < p.end ? p : undefined;
 }
 
-/** Word-highlight captions: up to two lines, bottom centre, active word in amber. */
-export const Captions: React.FC<{ captions: ResolvedPlan["captions"] }> = ({ captions }) => {
+export interface CaptionLayout {
+  /** Distance from the bottom, or from the top when `top` is set (px at this composition's size). */
+  bottom?: number;
+  top?: number;
+  left?: number;
+  right?: number;
+  fontSize: number;
+}
+
+/**
+ * Word-highlight captions: up to two lines, active word in amber.
+ * Default layout: bottom centre of a 16:9 frame. Shorts pass their own layout and pages.
+ */
+export const Captions: React.FC<{ captions: ResolvedPlan["captions"]; pages?: CaptionPage[]; layout?: CaptionLayout }> = ({
+  captions,
+  pages,
+  layout,
+}) => {
   const frame = useCurrentFrame();
   const { fps, width } = useVideoConfig();
   const t = frame / fps;
-  const page = pageAt(captions.pages, t);
+  const page = pageAt(pages ?? captions.pages, t);
   if (!captions.enabled || !page) return null;
 
   const words = page.lines.flat();
@@ -30,15 +46,16 @@ export const Captions: React.FC<{ captions: ResolvedPlan["captions"] }> = ({ cap
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const scale = width / 1920;
+  const scale = layout ? layout.fontSize / 50 : width / 1920;
+  const place = layout
+    ? { left: layout.left ?? 0, right: layout.right ?? 0, ...(layout.top !== undefined ? { top: layout.top } : { bottom: layout.bottom ?? 0 }) }
+    : { left: 0, right: 0, bottom: 84 * scale };
 
   return (
     <div
       style={{
         position: "absolute",
-        left: 0,
-        right: 0,
-        bottom: 84 * scale,
+        ...place,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",

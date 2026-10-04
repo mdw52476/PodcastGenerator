@@ -1,8 +1,8 @@
 // pnpm render --plan fixtures/ep01/edit-plan.json [--out out/ep01] [--strict] [--no-labels]
-//              [--frames 0-899] [--no-proxy] [--concurrency 4]
+//              [--frames 0-899] [--no-proxy] [--concurrency 4] [--short short1]
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { parseArgs, PlanError, REPO_DIR, renderEpisode } from "../pipeline";
+import { parseArgs, PlanError, REPO_DIR, renderEpisode, renderShort, type RenderOptions } from "../pipeline";
 
 const args = parseArgs(process.argv.slice(2));
 if (typeof args.plan !== "string") {
@@ -14,7 +14,7 @@ const started = Date.now();
 let lastStage = "";
 
 try {
-  const r = await renderEpisode({
+  const opts: RenderOptions = {
     planPath: args.plan,
     outDir: typeof args.out === "string" ? args.out : join(REPO_DIR, "out", episodeId),
     strict: args.strict === true,
@@ -29,7 +29,8 @@ try {
       else console.log(`  ${e.message}`);
       lastStage = e.stage;
     },
-  });
+  };
+  const r = typeof args.short === "string" ? await renderShort({ ...opts, shortId: args.short }) : await renderEpisode(opts);
   console.log(`\n  ${r.finalPath}${r.proxyPath ? `\n  ${r.proxyPath}` : ""}`);
 } catch (err) {
   if (err instanceof PlanError) {

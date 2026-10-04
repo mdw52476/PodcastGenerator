@@ -9,7 +9,7 @@ import { cpus } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { bundle } from "@remotion/bundler";
 import { renderMedia, selectComposition } from "@remotion/renderer";
-import { EditPlan, resolvePlan, type Issue, type MusicItem, type ResolvedPlan, type WordTiming } from "@shoebox/edit-plan";
+import { EditPlan, parsePlan, resolvePlan, resolveShort, type Issue, type MusicItem, type ResolvedPlan, type WordTiming } from "@shoebox/edit-plan";
 import { alignNarration, ENGINE_DIR, FFMPEG, proxyArgs, PYTHON, REPO_DIR, run } from "./lib";
 
 export type Stage = "validate" | "align" | "music" | "bundle" | "render" | "loudness" | "proxy" | "done";
@@ -89,7 +89,7 @@ export async function prepareEpisode(o: RenderOptions): Promise<Prepared> {
   emit("validate");
   const planPath = resolve(o.planPath);
   const planDir = dirname(planPath);
-  const parsed = EditPlan.safeParse(JSON.parse(readFileSync(planPath, "utf8")));
+  const parsed = parsePlan(JSON.parse(readFileSync(planPath, "utf8")));
   if (!parsed.success) {
     throw new PlanError(`Edit plan is invalid:\n${parsed.error.issues.map((i) => `  ${i.path.join(".")}: ${i.message}`).join("\n")}`);
   }
@@ -196,22 +196,70 @@ export async function exportPreviewBundle(p: Prepared, bundleDir: string): Promi
 
 export async function renderEpisode(o: RenderOptions): Promise<RenderResult> {
   const prepared = await prepareEpisode(o);
-  const { plan, outDir, publicDir, inputProps, started, emit } = prepared;
-  const first = { issues: prepared.issues };
-
-  // ------------------------------------------------------------ 3. render
-  emit("bundle", 0, "Bundling composition");
-  const serveUrl = await bundle({ entryPoint: join(ENGINE_DIR, "src/index.ts"), publicDir });
-  const composition = await selectComposition({ serveUrl, id: "Episode", inputProps });
+  const { plan, outDir, inputProps, started, emit } = prepared;
 
   const id = plan.episode.id;
   const rawPath = join(outDir, `${id}.raw.mp4`);
   const finalPath = join(outDir, `${id}.mp4`);
   const proxyPath = join(outDir, `${id}-proxy-720p.mp4`);
+  const frames = o.frames ?? null;
+
+  await renderComposition(prepared, "Episode", inputProps, rawPath, o);
+  const loudness = await normalizeLoudness(rawPath, finalPath, plan, emit);
+
+  let proxy: string | null = null;
+  if (o.proxy !== false) {
+    emit("proxy", 0, "720p proxy");
+    await run(FFMPEG, ["-hide_banner", "-y", ...proxyArgs(finalPath, proxyPath)]);
+    proxy = proxyPath;
+  }
+  rmSync(rawPath);
+
+  const seconds = (Date.now() - started) / 1000;
+  const reportPath = join(outDir, "render-report.json");
+  writeFileSync(
+    reportPath,
+    JSON.stringify({ episode: id, renderedAt: new Date().toISOString(), seconds, frames, loudness, issues: prepared.issues }, null, 2),
+  );
+  emit("done", 1, "Done");
+  return { episodeId: id, finalPath, proxyPath: proxy, reportPath, issues: prepared.issues, loudness, seconds, prepared };
+}
+
+/** A vertical short cut from the episode: same music, grade and timing, 9:16 frame. */
+export async function renderShort(o: RenderOptions & { shortId: string }): Promise<RenderResult> {
+  const prepared = await prepareEpisode(o);
+  const { plan, outDir, inputProps, started, emit } = prepared;
+  const props = resolveShort(inputProps.plan, o.shortId, { placeholderLabels: inputProps.placeholderLabels });
+  const s = props.short;
+  const clipSec = s.end - s.start;
+  if (clipSec > props.preset.maxSec || clipSec < props.preset.minSec)
+    emit("validate", 1, `warning: ${o.shortId} is ${clipSec.toFixed(1)}s; ${props.preset.label} expects ${props.preset.minSec}-${props.preset.maxSec}s`);
+
+  const id = `${plan.episode.id}-${o.shortId}`;
+  const rawPath = join(outDir, `${id}.raw.mp4`);
+  const finalPath = join(outDir, `${id}.mp4`);
+  await renderComposition(prepared, "Short", props, rawPath, o);
+  const loudness = await normalizeLoudness(rawPath, finalPath, plan, emit);
+  rmSync(rawPath);
+
+  const seconds = (Date.now() - started) / 1000;
+  const reportPath = join(outDir, `${id}-report.json`);
+  writeFileSync(
+    reportPath,
+    JSON.stringify({ episode: plan.episode.id, short: o.shortId, platform: props.preset.id, window: [s.start, s.end], renderedAt: new Date().toISOString(), seconds, loudness, issues: prepared.issues }, null, 2),
+  );
+  emit("done", 1, "Done");
+  return { episodeId: plan.episode.id, finalPath, proxyPath: null, reportPath, issues: prepared.issues, loudness, seconds, prepared };
+}
+
+async function renderComposition(p: Prepared, compositionId: "Episode" | "Short", inputProps: Record<string, unknown>, rawPath: string, o: RenderOptions) {
+  p.emit("bundle", 0, "Bundling composition");
+  const serveUrl = await bundle({ entryPoint: join(ENGINE_DIR, "src/index.ts"), publicDir: p.publicDir });
+  const composition = await selectComposition({ serveUrl, id: compositionId, inputProps });
   const concurrency = o.concurrency ?? Math.max(1, Math.floor(cpus().length / 2));
   const frames = o.frames ?? null;
 
-  emit("render", 0, `Rendering ${frames ? `frames ${frames[0]}-${frames[1]}` : `${composition.durationInFrames} frames`} at ${composition.width}x${composition.height}, concurrency ${concurrency}`);
+  p.emit("render", 0, `Rendering ${frames ? `frames ${frames[0]}-${frames[1]}` : `${composition.durationInFrames} frames`} at ${composition.width}x${composition.height}, concurrency ${concurrency}`);
   let lastPct = -1;
   await renderMedia({
     composition,
@@ -228,12 +276,14 @@ export async function renderEpisode(o: RenderOptions): Promise<RenderResult> {
       const pct = Math.floor(progress * 100);
       if (pct !== lastPct) {
         lastPct = pct;
-        emit("render", progress, pct % 5 === 0 ? `${String(pct).padStart(3)}%  rendered ${renderedFrames}  encoded ${encodedFrames}` : undefined);
+        p.emit("render", progress, pct % 5 === 0 ? `${String(pct).padStart(3)}%  rendered ${renderedFrames}  encoded ${encodedFrames}` : undefined);
       }
     },
   });
+}
 
-  // ------------------------------------------------------------ 4. loudness + proxy
+/** Two-pass loudnorm to the plan's target; video is copied untouched. */
+async function normalizeLoudness(rawPath: string, finalPath: string, plan: EditPlan, emit: Prepared["emit"]) {
   emit("loudness", 0, `Loudness: two-pass loudnorm to ${plan.output.loudnessLUFS} LUFS / ${plan.output.truePeakDb} dBTP`);
   const target = `I=${plan.output.loudnessLUFS}:TP=${plan.output.truePeakDb}:LRA=11`;
   const pass1 = await run(FFMPEG, ["-hide_banner", "-i", rawPath, "-af", `loudnorm=${target}:print_format=json`, "-f", "null", "-"]);
@@ -249,23 +299,7 @@ export async function renderEpisode(o: RenderOptions): Promise<RenderResult> {
   const summary = check.slice(check.lastIndexOf("Summary"));
   const loudness = { integrated: /I:\s+(-?[\d.]+) LUFS/.exec(summary)?.[1], truePeak: /Peak:\s+(-?[\d.]+) dBFS/.exec(summary)?.[1] };
   emit("loudness", 1, `before: ${m.input_i} LUFS, ${m.input_tp} dBTP  ->  after: ${loudness.integrated} LUFS, true peak ${loudness.truePeak} dBTP`);
-
-  let proxy: string | null = null;
-  if (o.proxy !== false) {
-    emit("proxy", 0, "720p proxy");
-    await run(FFMPEG, ["-hide_banner", "-y", ...proxyArgs(finalPath, proxyPath)]);
-    proxy = proxyPath;
-  }
-  rmSync(rawPath);
-
-  const seconds = (Date.now() - started) / 1000;
-  const reportPath = join(outDir, "render-report.json");
-  writeFileSync(
-    reportPath,
-    JSON.stringify({ episode: id, renderedAt: new Date().toISOString(), seconds, frames, loudness, issues: first.issues }, null, 2),
-  );
-  emit("done", 1, "Done");
-  return { episodeId: id, finalPath, proxyPath: proxy, reportPath, issues: first.issues, loudness, seconds, prepared };
+  return loudness;
 }
 
 /** Generator parameters for a music item. show-theme is a placeholder bed until a real theme exists. */

@@ -1,7 +1,7 @@
 import { checkText, type Violation } from "@shoebox/text-rules";
 import { chunkCaptions, type CaptionPage } from "./captions";
 import { CueIndex } from "./cues";
-import type { EditPlan, Motion, MusicItem, WordTiming } from "./schema";
+import type { EditPlan, Motion, MusicItem, Platform, Short, WordTiming } from "./schema";
 
 /**
  * A plan with every cue turned into seconds. This is what the Remotion
@@ -43,7 +43,12 @@ export interface ResolvedPlan {
   }>;
   /** Merged spans where Walt is speaking; music ducks inside these. */
   voiceSpans: Array<[number, number]>;
-  shorts: Array<{ id: string; start: number; end: number; hook: string | null }>;
+  shorts: Array<
+    Omit<Short, "cueStart" | "cueEnd" | "startSec" | "endSec"> & { start: number; end: number; cueStart: string; cueEnd: string }
+  >;
+  shortsDefaults: { endCardText: string; platform: Platform };
+  /** Script words with times; shorts re-chunk captions for the narrow frame from these. */
+  words: WordTiming[];
 }
 
 export interface Issue {
@@ -173,13 +178,26 @@ export function resolvePlan(plan: EditPlan, words: WordTiming[], opts: ResolveOp
 
   const shorts = plan.shorts.map((s) => {
     const where = `shorts.${s.id}`;
-    const start = at(where, s.cueStart, undefined);
-    const end = at(where, s.cueEnd, undefined, start, "end");
+    const start = s.startSec ?? at(where, s.cueStart, undefined);
+    const end = s.endSec ?? at(where, s.cueEnd, undefined, start, "end");
     const len = end - start;
     if (Number.isFinite(len) && (len < 15 || len > 60))
       issues.push({ level: "warning", where, message: `length ${len.toFixed(1)}s is outside 15-60s` });
-    return { id: s.id, start, end, hook: s.hook ?? null };
+    for (const [field, value] of [["hook", s.hook], ["title", s.title], ["description", s.description]] as const) {
+      if (!value) continue;
+      const v = checkText(value);
+      if (v.some((x) => x.severity === "error"))
+        issues.push({ level: "error", where: `${where}.${field}`, message: `text rules: ${v.map((x) => x.message).join("; ")}`, violations: v });
+    }
+    const { startSec: _s, endSec: _e, ...rest } = s;
+    return { ...rest, hook: s.hook ?? null, start, end };
   });
+
+  if (plan.shortsDefaults) {
+    const v = checkText(plan.shortsDefaults.endCardText);
+    if (v.some((x) => x.severity === "error"))
+      issues.push({ level: "error", where: "shortsDefaults.endCardText", message: `text rules: ${v.map((x) => x.message).join("; ")}`, violations: v });
+  }
 
   // Captions are narration: report rule hits as warnings (the script is checked upstream in the pipeline).
   const overrides = plan.captions.overrides ?? {};
@@ -209,6 +227,11 @@ export function resolvePlan(plan: EditPlan, words: WordTiming[], opts: ResolveOp
     music,
     voiceSpans: voiceSpans(words),
     shorts,
+    shortsDefaults: {
+      endCardText: plan.shortsDefaults?.endCardText ?? "Full story on the channel",
+      platform: plan.shortsDefaults?.platform ?? "youtube_shorts",
+    },
+    words: words.map((w, i) => (overrides[i] ? { ...w, word: overrides[i] } : w)),
   };
   return { resolved, issues };
 }

@@ -1,10 +1,10 @@
-// pnpm job submit --plan fixtures/ep01/edit-plan.json [--prepare | --frames 0-899] [--strict] [--no-labels] [--no-proxy] [--no-dropbox] [--watch]
+// pnpm job submit --plan fixtures/ep01/edit-plan.json [--prepare | --short short1 | --frames 0-899] [--strict] [--no-labels] [--no-proxy] [--no-dropbox] [--watch]
 // pnpm job watch [job-id]      (latest job if no id)
 // pnpm job list
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
-import { EditPlan } from "@shoebox/edit-plan";
+import { EditPlan, upgradePlan } from "@shoebox/edit-plan";
 import { parseArgs } from "@shoebox/engine/pipeline";
 import { db, objectExists, uploadFile, type RenderJob } from "./supabase";
 
@@ -22,7 +22,7 @@ async function submit() {
   if (typeof args.plan !== "string") throw new Error("usage: pnpm job submit --plan <edit-plan.json>");
   const planPath = resolve(args.plan);
   const planDir = dirname(planPath);
-  const raw = JSON.parse(readFileSync(planPath, "utf8"));
+  const raw = upgradePlan(JSON.parse(readFileSync(planPath, "utf8")));
   const plan = EditPlan.parse(raw);
 
   // Every file the plan points at, relative to the plan.
@@ -57,7 +57,7 @@ async function submit() {
     .from("render_jobs")
     .insert({
       episode_id: plan.episode.id,
-      kind: args.prepare === true ? "prepare" : frames ? "preview" : "episode",
+      kind: args.prepare === true ? "prepare" : typeof args.short === "string" ? "short" : frames ? "preview" : "episode",
       plan: raw,
       assets,
       options: {
@@ -66,6 +66,7 @@ async function submit() {
         labels: args["no-labels"] !== true,
         proxy: args["no-proxy"] !== true,
         dropbox: args["no-dropbox"] !== true,
+        ...(typeof args.short === "string" ? { shortId: args.short } : {}),
       },
     })
     .select("id")

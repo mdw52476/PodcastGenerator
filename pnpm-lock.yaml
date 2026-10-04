@@ -32,6 +32,9 @@ importers:
       '@shoebox/engine':
         specifier: workspace:*
         version: link:../../packages/engine
+      '@shoebox/text-rules':
+        specifier: workspace:*
+        version: link:../../packages/text-rules
       '@supabase/ssr':
         specifier: ^0.12.7
         version: 0.12.7(@supabase/supabase-js@2.117.2)

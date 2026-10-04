@@ -1,36 +1,15 @@
 import { notFound } from "next/navigation";
-import type { ResolvedPlan } from "@shoebox/edit-plan";
 import { DecisionBadge } from "@/components/badges";
 import { DecisionPanel, StatusSelect } from "@/components/EpisodeControls";
 import { Header } from "@/components/Header";
 import { PreviewPlayer } from "@/components/PreviewPlayer";
 import { RenderPanel } from "@/components/RenderPanel";
+import Link from "next/link";
+import { loadPreview } from "@/lib/preview";
 import { supabaseServer } from "@/lib/supabase/server";
 import { showLabel, stageLabel, timeAgo, type EpisodeRow, type EventRow, type JobRow } from "@/lib/stages";
 
 export const dynamic = "force-dynamic";
-
-type Supa = Awaited<ReturnType<typeof supabaseServer>>;
-
-/**
- * Load the preview bundle (props.json written by the worker) and swap its
- * relative asset paths for short-lived signed URLs the player can fetch.
- */
-async function loadPreview(supabase: Supa, episodeId: string) {
-  const prefix = `previews/${episodeId}`;
-  const { data: blob } = await supabase.storage.from("studio").download(`${prefix}/props.json`);
-  if (!blob) return null;
-  const props = JSON.parse(await blob.text()) as { plan: ResolvedPlan; placeholderLabels: boolean };
-  const plan = props.plan;
-  const rels = [plan.narrationSrc, ...plan.music.map((m) => m.src), ...plan.shots.flatMap((s) => (s.src ? [s.src] : []))];
-  const { data: signed } = await supabase.storage.from("studio").createSignedUrls(rels.map((r) => `${prefix}/${r}`), 6 * 3600);
-  const url = new Map(rels.map((r, i) => [r, signed?.[i]?.signedUrl]));
-  if (rels.some((r) => !url.get(r))) return null;
-  plan.narrationSrc = url.get(plan.narrationSrc)!;
-  for (const m of plan.music) m.src = url.get(m.src)!;
-  for (const s of plan.shots) if (s.src) s.src = url.get(s.src)!;
-  return props;
-}
 
 const EVENT_TEXT: Record<EventRow["kind"], string> = {
   approved: "Approved",
@@ -48,7 +27,7 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
     supabase.from("episode_events").select("*").eq("episode_id", episodeId).order("created_at", { ascending: false }),
     supabase
       .from("render_jobs")
-      .select("id, episode_id, kind, status, stage, progress, outputs, error, created_at, finished_at")
+      .select("id, episode_id, kind, status, stage, progress, outputs, options, error, created_at, finished_at")
       .eq("episode_id", episodeId)
       .order("created_at", { ascending: false })
       .limit(8),
@@ -85,9 +64,14 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
                 No preview yet. Use “Refresh preview” on the right; it takes about a minute.
               </div>
             )}
-            <p className="mt-2 text-xs text-muted">
-              Preview plays the same composition the worker renders. Grain and fine detail look best in the downloaded 1080p file.
-            </p>
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-muted">
+                Preview plays the same composition the worker renders. Grain and fine detail look best in the downloaded 1080p file.
+              </p>
+              <Link href={`/episodes/${encodeURIComponent(episode.id)}/clips`} className="rounded-md border border-line px-3 py-1.5 text-sm hover:border-amber/60">
+                Clipping studio
+              </Link>
+            </div>
           </div>
 
           <section className="mt-6">
