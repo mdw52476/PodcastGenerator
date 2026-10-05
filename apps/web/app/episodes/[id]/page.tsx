@@ -118,7 +118,23 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
         </div>
 
         <aside className="flex flex-col gap-4">
-          <DecisionPanel episodeId={episode.id} />
+          {/* Final approval only once there's a video to judge; earlier stages explain what happens next. */}
+          {["idea", "researched", "scripted", "voiced", "passed"].includes(episode.status as string) ? (
+            <section className="rounded-lg border border-line bg-panel p-4 text-sm text-muted">
+              <h2 className="text-sm font-semibold tracking-wider uppercase">Decision</h2>
+              <p className="mt-2">
+                {(episode.status as string) === "idea"
+                  ? "This is a pitch. Approve the idea (left) to have it written, or pass on it."
+                  : (episode.status as string) === "researched"
+                    ? "Approved for writing. The scheduled writer picks it up on its next run; you'll approve the finished video here once it's rendered."
+                    : (episode.status as string) === "passed"
+                      ? "You passed on this idea."
+                      : "Being voiced and assembled. The final Approve appears here once there's a video to watch."}
+              </p>
+            </section>
+          ) : (
+            <DecisionPanel episodeId={episode.id} />
+          )}
           <RenderPanel episodeId={episode.id} initialJobs={(jobs ?? []) as JobRow[]} />
         </aside>
       </main>
