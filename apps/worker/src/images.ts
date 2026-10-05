@@ -70,7 +70,9 @@ export async function generateShotImages(
           log(`image for ${shot.id} (${model})`);
         } catch (e) {
           failed.push(shot.id);
-          log(`image for ${shot.id} failed: ${e instanceof Error ? e.message : e}`);
+          // fal's ApiError carries the useful reason (e.g. an exhausted balance) in its body.
+          const body = (e as { body?: unknown }).body;
+          log(`image for ${shot.id} failed: ${e instanceof Error ? e.message : e}${body ? ` ${JSON.stringify(body).slice(0, 300)}` : ""}`);
         }
       }),
     );
