@@ -10,7 +10,7 @@ async function current(episodeId: string) {
   return { supabase, status: data.status as StageId };
 }
 
-async function move(episodeId: string, to: StageId, event: { kind: "status" | "approved" | "changes_requested"; body?: string }) {
+async function move(episodeId: string, to: StageId | "passed", event: { kind: "status" | "approved" | "changes_requested"; body?: string }) {
   const { supabase, status } = await current(episodeId);
   if (status !== to) {
     const { error } = await supabase.from("episodes").update({ status: to }).eq("id", episodeId);
@@ -31,6 +31,23 @@ export async function setStatus(episodeId: string, to: string) {
 
 export async function approve(episodeId: string, note: string) {
   await move(episodeId, "approved", { kind: "approved", body: note.trim() });
+}
+
+/** Autopilot idea: go ahead and write it (the scheduled writer picks it up on its next run). */
+export async function approveIdea(episodeId: string) {
+  const { status } = await current(episodeId);
+  if (status !== "idea") throw new Error("Only ideas can be approved for writing.");
+  await move(episodeId, "researched", { kind: "approved", body: "Idea approved for writing" });
+}
+
+/** Autopilot idea: not this one. Kept (hidden from the board) so it isn't pitched again. */
+export async function passIdea(episodeId: string) {
+  const { supabase, status } = await current(episodeId);
+  if (status !== "idea") throw new Error("Only ideas can be passed on.");
+  const { error } = await supabase.from("episodes").update({ status: "passed" }).eq("id", episodeId);
+  if (error) throw new Error(error.message);
+  await supabase.from("episode_events").insert({ episode_id: episodeId, kind: "status", from_status: "idea", to_status: "passed", body: "Passed on this idea" });
+  revalidatePath("/");
 }
 
 /** Sends the episode back to "edited" with a note saying what to change. */

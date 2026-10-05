@@ -15,7 +15,9 @@
     "web": "pnpm --filter @shoebox/web dev",
     "web:build": "pnpm --filter @shoebox/web build",
     "owner:add": "tsx apps/worker/src/owner.ts",
-    "shows:seed": "tsx apps/worker/src/seed-shows.ts"
+    "shows:seed": "tsx apps/worker/src/seed-shows.ts",
+    "autopilot": "tsx apps/worker/src/autopilot-cli.ts",
+    "autopilot:token": "tsx apps/worker/src/autopilot-token.ts"
   },
   "devDependencies": {
     "@types/node": "^24",

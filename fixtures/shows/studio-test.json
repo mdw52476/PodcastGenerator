@@ -1,6 +1,9 @@
 {
   "name": "Studio Test Show",
-  "narrator": { "name": "Sarah", "identity": "Placeholder narrator for testing a second show end to end." },
+  "narrator": {
+    "name": "Sarah",
+    "identity": "Placeholder narrator for testing a second show end to end."
+  },
   "voice": {
     "voiceId": "EXAVITQu4vr4xnSDxMaL",
     "voiceName": "Sarah - Mature, Reassuring, Confident",
@@ -15,12 +18,40 @@
   "disclaimer": "",
   "titleCard": "STUDIO TEST SHOW",
   "disclosureText": "AI narration. A short invented test story.",
-  "look": { "tint": "cool", "saturation": 0.85, "contrast": 1.04, "vignette": 0.18, "grain": 0.06, "halation": 0.05 },
-  "captions": { "color": "#FFFFFF", "highlightColor": "#5FA8A8" },
-  "music": { "preset": "lighter", "seed": 3, "duckUnderVoiceDb": -14 },
-  "shorts": { "endCardText": "More on the Studio Test Show", "platform": "youtube_shorts", "count": 3 },
-  "platforms": ["youtube"],
+  "look": {
+    "tint": "cool",
+    "saturation": 0.85,
+    "contrast": 1.04,
+    "vignette": 0.18,
+    "grain": 0.06,
+    "halation": 0.05
+  },
+  "captions": {
+    "color": "#FFFFFF",
+    "highlightColor": "#5FA8A8"
+  },
+  "music": {
+    "preset": "lighter",
+    "seed": 3,
+    "duckUnderVoiceDb": -14
+  },
+  "shorts": {
+    "endCardText": "More on the Studio Test Show",
+    "platform": "youtube_shorts",
+    "count": 3
+  },
+  "platforms": [
+    "youtube"
+  ],
   "cadence": "as needed",
   "targetMinutes": 1,
-  "neverShow": []
+  "neverShow": [],
+  "visualStyle": "soft natural light, calm coastal New England, muted cool palette, documentary photograph",
+  "autopilot": {
+    "enabled": true,
+    "ideasPerBatch": 2,
+    "imageModel": "flux-schnell",
+    "shortsToRender": 1,
+    "ideaBrief": "Short invented, gentle stories for testing. Clearly fictional."
+  }
 }

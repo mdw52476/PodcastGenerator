@@ -18,12 +18,49 @@
   "disclaimer": "This story is based on real events and public records. I'm a fictional narrator, and some scenes are dramatized. Where the facts are disputed, I'll tell you.",
   "titleCard": "THE SHOEBOX FILES",
   "disclosureText": "AI narration. Based on real events and public records.",
-  "look": { "tint": "teal-shadows-amber-highlights", "saturation": 0.7, "contrast": 1.08, "vignette": 0.25, "grain": 0.12, "halation": 0.1 },
-  "captions": { "color": "#FFFFFF", "highlightColor": "#E8A33D" },
-  "music": { "preset": "dark", "seed": 7, "duckUnderVoiceDb": -16 },
-  "shorts": { "endCardText": "Full story on The Shoebox Files", "platform": "youtube_shorts", "count": 10 },
-  "platforms": ["youtube", "youtube_shorts"],
+  "look": {
+    "tint": "teal-shadows-amber-highlights",
+    "saturation": 0.7,
+    "contrast": 1.08,
+    "vignette": 0.25,
+    "grain": 0.12,
+    "halation": 0.1
+  },
+  "captions": {
+    "color": "#FFFFFF",
+    "highlightColor": "#E8A33D"
+  },
+  "music": {
+    "preset": "dark",
+    "seed": 7,
+    "duckUnderVoiceDb": -16
+  },
+  "shorts": {
+    "endCardText": "Full story on The Shoebox Files",
+    "platform": "youtube_shorts",
+    "count": 10
+  },
+  "platforms": [
+    "youtube",
+    "youtube_shorts"
+  ],
   "cadence": "weekly",
   "targetMinutes": 15,
-  "neverShow": ["bodies", "blood", "wounds", "weapons in use", "identifiable real people", "real logos or police insignia", "children in peril"]
+  "neverShow": [
+    "bodies",
+    "blood",
+    "wounds",
+    "weapons in use",
+    "identifiable real people",
+    "real logos or police insignia",
+    "children in peril"
+  ],
+  "visualStyle": "cinematic 35mm documentary reenactment, shallow depth of field, low-key practical lighting (lamps, headlights, streetlights), fog and haze, desaturated teal and amber palette, deep blacks, subtle film grain, no faces in clear focus",
+  "autopilot": {
+    "enabled": true,
+    "ideasPerBatch": 4,
+    "imageModel": "flux-schnell",
+    "shortsToRender": 3,
+    "ideaBrief": "True crime and unsolved mysteries: disappearances, cold cases, strange deaths, cases with a twist, especially recent developments (new IDs, DNA matches, reopened files). Respectful to victims; no gore. Prefer cases with solid public records and news coverage."
+  }
 }

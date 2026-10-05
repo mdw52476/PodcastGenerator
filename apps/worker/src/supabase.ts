@@ -13,7 +13,7 @@ export interface RenderJob {
   kind: "episode" | "preview" | "prepare" | "short" | "voice" | "revoice";
   plan: Record<string, any>;
   assets: Record<string, string>;
-  options: { frames?: [number, number]; strict?: boolean; labels?: boolean; proxy?: boolean; dropbox?: boolean; shortId?: string; script?: string; maxCharacters?: number };
+  options: { frames?: [number, number]; strict?: boolean; labels?: boolean; proxy?: boolean; dropbox?: boolean; shortId?: string; script?: string; maxCharacters?: number; autopilot?: boolean };
   status: "queued" | "running" | "succeeded" | "failed" | "cancelled";
   stage: string | null;
   progress: number;

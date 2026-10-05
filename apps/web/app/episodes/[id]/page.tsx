@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { DecisionBadge } from "@/components/badges";
+import { FactSheet, PitchCard } from "@/components/FactSheet";
+import { IdeaButtons } from "@/components/IdeaButtons";
 import { DecisionPanel, StatusSelect } from "@/components/EpisodeControls";
 import { Header } from "@/components/Header";
 import { PreviewPlayer } from "@/components/PreviewPlayer";
@@ -23,7 +25,7 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
   const episodeId = decodeURIComponent(id);
   const supabase = await supabaseServer();
   const [{ data: ep }, { data: events }, { data: jobs }, preview] = await Promise.all([
-    supabase.from("episodes").select("id, show, title, status, updated_at").eq("id", episodeId).maybeSingle(),
+    supabase.from("episodes").select("id, show, title, status, updated_at, autopilot, pitch, fact_sheet").eq("id", episodeId).maybeSingle(),
     supabase.from("episode_events").select("*").eq("episode_id", episodeId).order("created_at", { ascending: false }),
     supabase
       .from("render_jobs")
@@ -34,7 +36,7 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
     loadPreview(supabase, episodeId),
   ]);
   if (!ep) notFound();
-  const episode = ep as EpisodeRow;
+  const episode = ep as EpisodeRow & { fact_sheet: string | null };
   const history = (events ?? []) as EventRow[];
   const lastDecision = history.find((e) => e.kind === "approved" || e.kind === "changes_requested");
 
@@ -81,6 +83,19 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
               </div>
             </div>
           </div>
+
+          {(episode.pitch || episode.fact_sheet) && (
+            <div className="mt-6 flex flex-col gap-4">
+              {episode.status === "idea" && (
+                <div className="flex flex-wrap items-center gap-3 rounded-lg border border-teal/40 bg-teal/5 p-3 text-sm">
+                  <span>Autopilot pitched this idea. Approve it and the scheduled writer researches, writes and voices it on its next run.</span>
+                  <IdeaButtons episodeId={episode.id} />
+                </div>
+              )}
+              {episode.pitch && <PitchCard pitch={episode.pitch} />}
+              {episode.fact_sheet && <FactSheet text={episode.fact_sheet} />}
+            </div>
+          )}
 
           <section className="mt-6">
             <h2 className="text-sm font-semibold tracking-wider text-muted uppercase">History</h2>

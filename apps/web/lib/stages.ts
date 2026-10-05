@@ -19,6 +19,15 @@ export interface EpisodeRow {
   title: string;
   status: StageId;
   updated_at: string;
+  autopilot?: boolean;
+  pitch?: Pitch | null;
+}
+
+export interface Pitch {
+  logline: string;
+  whyNow?: string | null;
+  angle?: string | null;
+  sources?: Array<{ title?: string; url: string }>;
 }
 
 export interface JobRow {

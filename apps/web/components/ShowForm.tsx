@@ -197,6 +197,40 @@ export function ShowForm({ id, initial }: { id: string; initial: ShowProfile }) 
       </section>
 
       <section className={section}>
+        <h2 className={h2}>Autopilot</h2>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={p.autopilot.enabled} onChange={(e) => setP((x) => ({ ...x, autopilot: { ...x.autopilot, enabled: e.target.checked } }))} className="accent-amber" />
+          The scheduled writer pitches ideas for this show and writes the ones you approve
+        </label>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <label className={lab}>
+            Ideas per batch
+            <input type="number" min={1} max={10} value={p.autopilot.ideasPerBatch} onChange={(e) => setP((x) => ({ ...x, autopilot: { ...x.autopilot, ideasPerBatch: Math.round(num(e.target.value)) } }))} className={field} />
+          </label>
+          <label className={lab}>
+            Shot pictures
+            <select value={p.autopilot.imageModel} onChange={(e) => setP((x) => ({ ...x, autopilot: { ...x.autopilot, imageModel: e.target.value as ShowProfile["autopilot"]["imageModel"] } }))} className={field}>
+              <option value="flux-schnell">FLUX schnell (~$0.15 per episode)</option>
+              <option value="flux-2-pro">FLUX.2 Pro (~$1.20 per episode, better)</option>
+              <option value="none">None (placeholders)</option>
+            </select>
+          </label>
+          <label className={lab}>
+            Shorts to render automatically
+            <input type="number" min={0} max={20} value={p.autopilot.shortsToRender} onChange={(e) => setP((x) => ({ ...x, autopilot: { ...x.autopilot, shortsToRender: Math.round(num(e.target.value)) } }))} className={field} />
+          </label>
+          <label className={`${lab} sm:col-span-3`}>
+            What to look for (topics, regions, eras, anything to avoid)
+            <textarea rows={3} value={p.autopilot.ideaBrief} onChange={(e) => setP((x) => ({ ...x, autopilot: { ...x.autopilot, ideaBrief: e.target.value } }))} className={`${field} resize-y`} />
+          </label>
+          <label className={`${lab} sm:col-span-3`}>
+            Picture style (added to every image prompt)
+            <textarea rows={2} value={p.visualStyle} onChange={(e) => set("visualStyle", e.target.value)} className={`${field} resize-y`} />
+          </label>
+        </div>
+      </section>
+
+      <section className={section}>
         <h2 className={h2}>Never show (picture guardrails)</h2>
         <textarea
           rows={3}

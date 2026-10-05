@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { DecisionBadge, JobStatus } from "@/components/badges";
+import { IdeaButtons } from "@/components/IdeaButtons";
 import { supabaseServer } from "@/lib/supabase/server";
 import { STAGES, showLabel, timeAgo, type EpisodeRow, type EventRow, type JobRow } from "@/lib/stages";
 
@@ -9,7 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function Board() {
   const supabase = await supabaseServer();
   const [{ data: episodes }, { data: events }, { data: jobs }, { data: owner }] = await Promise.all([
-    supabase.from("episodes").select("id, show, title, status, updated_at").order("updated_at", { ascending: false }),
+    supabase.from("episodes").select("id, show, title, status, updated_at, autopilot, pitch").neq("status", "passed").order("updated_at", { ascending: false }),
     supabase.from("episode_events").select("*").in("kind", ["approved", "changes_requested"]).order("created_at", { ascending: false }),
     supabase.from("render_jobs").select("id, episode_id, kind, status, progress, created_at").order("created_at", { ascending: false }).limit(200),
     supabase.from("app_owners").select("user_id").maybeSingle(),
@@ -42,6 +43,20 @@ export default async function Board() {
                 <div className="flex min-h-12 flex-col gap-2 px-2 pb-2">
                   {cards.map((e) => {
                     const job = latestJob.get(e.id);
+                    // Autopilot pitches: read the logline and decide right on the board.
+                    if (e.status === "idea" && e.pitch)
+                      return (
+                        <div key={e.id} className="rounded-md border border-teal/40 bg-raised p-3">
+                          <div className="text-xs text-muted">{showLabel(e.show)} · autopilot pitch</div>
+                          <Link href={`/episodes/${encodeURIComponent(e.id)}`} className="mt-0.5 block leading-snug font-medium hover:text-amber">
+                            {e.title}
+                          </Link>
+                          <p className="mt-1 line-clamp-4 text-xs leading-relaxed text-muted">{e.pitch.logline}</p>
+                          <div className="mt-2">
+                            <IdeaButtons episodeId={e.id} compact />
+                          </div>
+                        </div>
+                      );
                     return (
                       <Link
                         key={e.id}

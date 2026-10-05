@@ -9,6 +9,7 @@
     "dropbox-auth": "tsx src/dropbox-auth.ts"
   },
   "dependencies": {
+    "@fal-ai/client": "^1.10.1",
     "@shoebox/edit-plan": "workspace:*",
     "@shoebox/engine": "workspace:*",
     "@supabase/supabase-js": "^2.117.2",

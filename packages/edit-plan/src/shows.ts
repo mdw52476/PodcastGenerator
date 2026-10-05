@@ -51,6 +51,21 @@ export const ShowProfile = z.object({
   cadence: z.string().default("weekly"),
   targetMinutes: z.number().positive().default(15),
   neverShow: z.array(z.string()).default([]),
+  /** Picture style added to every image prompt, e.g. "cinematic 35mm documentary, low-key light". */
+  visualStyle: z.string().default(""),
+  autopilot: z
+    .object({
+      /** When on, the scheduled writer proposes ideas for this show and writes approved ones. */
+      enabled: z.boolean().default(false),
+      ideasPerBatch: z.number().int().min(1).max(10).default(4),
+      /** Automatic shot pictures. "none" keeps placeholders. */
+      imageModel: z.enum(["flux-schnell", "flux-2-pro", "none"]).default("flux-schnell"),
+      /** How many of the episode's suggested shorts render automatically. */
+      shortsToRender: z.number().int().min(0).max(20).default(3),
+      /** Topic guidance for idea hunting (themes, regions, eras, things to avoid). */
+      ideaBrief: z.string().default(""),
+    })
+    .prefault({}),
 });
 export type ShowProfile = z.infer<typeof ShowProfile>;
 

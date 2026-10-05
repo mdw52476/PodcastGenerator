@@ -57,8 +57,11 @@ export async function runJob(job: RenderJob): Promise<void> {
       const prepared = await prepareEpisode({ planPath: v.planPath, outDir: join(dir, "out"), strict: false, labels: true, cacheDir: optional("MUSIC_CACHE_DIR"), onEvent });
       await update(job, { stage: "upload", progress: 0.9, heartbeat_at: new Date().toISOString() });
       const preview = await uploadPreviewBundle(job, prepared, join(dir, "bundle"));
-      await update(job, { status: "succeeded", stage: "done", progress: 1, outputs: { ...v.outputs, preview }, finished_at: new Date().toISOString() });
-      log(job, `${job.kind} done`);
+      // Autopilot: queue the full render and the show's chosen number of shorts.
+      let queued: string[] = [];
+      if (v.autopilot) queued = await queueAutopilotRenders(job.episode_id, v.profile.autopilot.shortsToRender);
+      await update(job, { status: "succeeded", stage: "done", progress: 1, outputs: { ...v.outputs, preview, queued }, finished_at: new Date().toISOString() });
+      log(job, `${job.kind} done${queued.length ? `; queued ${queued.join(", ")}` : ""}`);
       return;
     }
 
@@ -126,6 +129,14 @@ export async function runJob(job: RenderJob): Promise<void> {
     outputs.renderSeconds = Math.round(result.seconds);
     await update(job, { status: "succeeded", stage: "done", progress: 1, outputs, finished_at: new Date().toISOString() });
     log(job, `succeeded in ${Math.round(result.seconds)}s`);
+    // An autopilot episode is ready for review once its full render is done.
+    if (job.kind === "episode") {
+      const { data: ep } = await db().from("episodes").select("autopilot, status").eq("id", job.episode_id).single();
+      if (ep?.autopilot && ep.status === "edited") {
+        await db().from("episodes").update({ status: "awaiting-approval" }).eq("id", job.episode_id);
+        log(job, "episode moved to Awaiting approval");
+      }
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     // A bad plan will fail the same way every time, so don't retry it.
@@ -171,6 +182,20 @@ async function removeStale(prefix: string, keep: Set<string>, sub = ""): Promise
     else if (!keep.has(rel)) stale.push(`${prefix}/${rel}`);
   }
   if (stale.length) await db().storage.from(BUCKET).remove(stale);
+}
+
+/** Full render plus the first N suggested shorts, from the episode's saved plan and files. */
+async function queueAutopilotRenders(episodeId: string, shorts: number): Promise<string[]> {
+  const { data: ep, error } = await db().from("episodes").select("plan, assets").eq("id", episodeId).single();
+  if (error || !ep?.plan) throw new Error(`could not queue renders: ${error?.message ?? "no plan"}`);
+  const ids = ((ep.plan.shorts ?? []) as Array<{ id: string }>).slice(0, shorts).map((s) => s.id);
+  const rows = [
+    { episode_id: episodeId, kind: "episode", plan: ep.plan, assets: ep.assets, options: {} },
+    ...ids.map((shortId) => ({ episode_id: episodeId, kind: "short", plan: ep.plan, assets: ep.assets, options: { shortId } })),
+  ];
+  const { error: insErr } = await db().from("render_jobs").insert(rows);
+  if (insErr) throw new Error(`could not queue renders: ${insErr.message}`);
+  return ["episode", ...ids];
 }
 
 /** On shutdown (Railway redeploy), hand the job back to the queue without using up an attempt. */

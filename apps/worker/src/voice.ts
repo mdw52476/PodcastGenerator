@@ -5,7 +5,10 @@ import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   assembleNarration,
+  buildPlanFromDraft,
   buildPlanFromScript,
+  Draft,
+  draftIssues,
   diffParagraphs,
   joinParagraphs,
   parsePlan,
@@ -22,6 +25,7 @@ import {
 } from "@shoebox/edit-plan";
 import { FFMPEG, PlanError, run } from "@shoebox/engine/pipeline";
 import { remainingCharacters, speak } from "./elevenlabs";
+import { generateShotImages } from "./images";
 import { optional } from "./env";
 import { db, uploadFile, type RenderJob } from "./supabase";
 
@@ -111,6 +115,9 @@ async function uploadNarrationFiles(episodeId: string, dir: string, mp3: string,
 
 export interface VoiceResult {
   plan: EditPlan;
+  profile: ShowProfile;
+  /** Autopilot episode: images were generated and renders should follow. */
+  autopilot: boolean;
   /** Directory holding the plan's files, ready for prepareEpisode. */
   dir: string;
   planPath: string;
@@ -156,7 +163,7 @@ export async function revoice(job: RenderJob, inputDir: string, log: (m: string)
 
   const planPath = join(inputDir, "edit-plan.json");
   writeFileSync(planPath, JSON.stringify(next, null, 2));
-  return { plan: next, dir: inputDir, planPath, outputs: { voicedParagraphs: toVoice.map((k) => k + 1), removedParagraphs: ops.filter((o) => o.kind === "delete").length, characters, notes, durationSec: assembled.durationSec } };
+  return { plan: next, profile, autopilot: false, dir: inputDir, planPath, outputs: { voicedParagraphs: toVoice.map((k) => k + 1), removedParagraphs: ops.filter((o) => o.kind === "delete").length, characters, notes, durationSec: assembled.durationSec } };
 }
 
 /** First narration for a new episode: voice every paragraph, then build a starter plan in the show's style. */
@@ -165,8 +172,14 @@ export async function voiceNew(job: RenderJob, inputDir: string, log: (m: string
   const script = String(o.script ?? "");
   const issues = scriptIssues(script);
   if (issues.errors.length) throw new PlanError(`Script has text-rule problems:\n${issues.errors.join("\n")}`);
-  const { data: ep } = await db().from("episodes").select("show, title").eq("id", job.episode_id).single();
+  const { data: ep } = await db().from("episodes").select("show, title, draft, autopilot").eq("id", job.episode_id).single();
   const profile = await loadProfile(ep!.show);
+  // An autopilot draft brings its own shots, prompts and shorts; check it before spending anything.
+  const draft = ep!.draft ? Draft.parse(ep!.draft) : null;
+  if (draft) {
+    const problems = draftIssues(draft);
+    if (problems.length) throw new PlanError(`Draft has text-rule problems:\n${problems.join("\n")}`);
+  }
 
   const paras = splitParagraphs(script);
   await checkBudget(paras.join("").length, o.maxCharacters, log);
@@ -182,20 +195,44 @@ export async function voiceNew(job: RenderJob, inputDir: string, log: (m: string
 
   const finalScript = joinParagraphs(paras);
   const up = await uploadNarrationFiles(job.episode_id, inputDir, mp3, assembled.words, assembled.durationSec, finalScript);
-  const plan = buildPlanFromScript({
+  const input = {
     showSlug: ep!.show,
     profile,
-    episode: { id: job.episode_id, title: ep!.title },
+    episode: { id: job.episode_id, title: draft?.title ?? ep!.title },
     script: finalScript,
     words: assembled.words,
     durationSec: assembled.durationSec,
     files: { narration: up.audioRel, script: up.scriptRel, timings: up.timingsRel },
-  });
-  await saveEpisode(job.episode_id, plan, finalScript, up.assets, "edited");
+  };
+  const built = draft ? buildPlanFromDraft(input, draft) : { plan: buildPlanFromScript(input), notes: [] as string[] };
+  const plan = built.plan;
+  for (const n of built.notes) log(n);
+
+  // Autopilot: pictures for every shot (fal.ai), per the show setting.
+  const autopilot = !!ep!.autopilot && !!(job.options as any).autopilot;
+  let images = { assets: {} as Record<string, string>, generated: 0, failed: [] as string[] };
+  if (autopilot) images = await generateShotImages(job.episode_id, plan, profile, inputDir, log);
+  await saveEpisode(job.episode_id, plan, finalScript, { ...up.assets, ...images.assets }, "edited");
 
   const planPath = join(inputDir, "edit-plan.json");
   writeFileSync(planPath, JSON.stringify(plan, null, 2));
-  return { plan, dir: inputDir, planPath, outputs: { voicedParagraphs: all.map((k) => k + 1), characters: paras.join("").length, durationSec: assembled.durationSec, shots: plan.shots.length, shorts: plan.shorts.length } };
+  return {
+    plan,
+    profile,
+    autopilot,
+    dir: inputDir,
+    planPath,
+    outputs: {
+      voicedParagraphs: all.map((k) => k + 1),
+      characters: paras.join("").length,
+      durationSec: assembled.durationSec,
+      shots: plan.shots.length,
+      shorts: plan.shorts.length,
+      images: images.generated,
+      imagesFailed: images.failed,
+      notes: built.notes,
+    },
+  };
 }
 
 async function loadProfile(showId: string): Promise<ShowProfile> {
