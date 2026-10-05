@@ -44,8 +44,9 @@ export async function speak(text: string, voice: ShowProfile["voice"], context: 
       await new Promise((r) => setTimeout(r, 3000 * (attempt + 1)));
       continue;
     }
-    if (res.status === 401) throw new Error("ElevenLabs refused the API key (check ELEVENLABS_API_KEY and that it has Text to Speech access).");
+    // ElevenLabs answers 401 for a bad key, an exhausted quota and free-tier abuse blocks alike; its message tells them apart.
     if (/quota|credits|limit/i.test(text)) throw new Error(`ElevenLabs is out of characters for this key or plan: ${text.slice(0, 300)}`);
+    if (res.status === 401) throw new Error(`ElevenLabs refused the request (HTTP 401): ${text.slice(0, 300)}`);
     throw new Error(`ElevenLabs text-to-speech failed: HTTP ${res.status} ${text.slice(0, 300)}`);
   }
 }

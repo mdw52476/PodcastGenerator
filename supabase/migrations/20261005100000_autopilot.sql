@@ -107,7 +107,7 @@ create function public.autopilot_submit_draft(p_token text, p_episode text, p_dr
 language plpgsql security definer set search_path = '' as $$
 declare
   e public.episodes;
-  script text := p_draft->>'script';
+  v_script text := p_draft->>'script';
   job uuid;
 begin
   perform private.autopilot_check(p_token);
@@ -115,18 +115,18 @@ begin
   if not found or not e.autopilot or e.status <> 'researched' or e.draft is not null then
     raise exception 'episode % is not an approved idea waiting for a draft', p_episode;
   end if;
-  if coalesce(script, '') = '' or coalesce(p_draft->>'title', '') = '' or coalesce(p_draft->>'factSheet', '') = '' then
+  if coalesce(v_script, '') = '' or coalesce(p_draft->>'title', '') = '' or coalesce(p_draft->>'factSheet', '') = '' then
     raise exception 'a draft needs title, script and factSheet';
   end if;
-  if length(script) > 40000 then raise exception 'script is too long (% characters)', length(script); end if;
+  if length(v_script) > 40000 then raise exception 'script is too long (% characters)', length(v_script); end if;
 
   update public.episodes
-     set draft = p_draft, script = script, fact_sheet = p_draft->>'factSheet',
+     set draft = p_draft, script = v_script, fact_sheet = p_draft->>'factSheet',
          title = left(p_draft->>'title', 120), status = 'scripted', claimed_at = null
    where id = p_episode;
   insert into public.render_jobs (episode_id, kind, plan, assets, options, max_attempts)
   values (p_episode, 'voice', '{}'::jsonb, '{}'::jsonb,
-          jsonb_build_object('script', script, 'maxCharacters', length(script) + 50, 'autopilot', true), 1)
+          jsonb_build_object('script', v_script, 'maxCharacters', length(v_script) + 50, 'autopilot', true), 1)
   returning id into job;
   return jsonb_build_object('episode', p_episode, 'voiceJob', job);
 end $$;
