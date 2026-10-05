@@ -7,7 +7,6 @@ import { TITLE_FONT } from "./fonts";
 import { GradeFilter, GradeOverlay } from "./Grade";
 import { Shot } from "./Shot";
 
-const AMBER = "#E8A33D";
 
 /** A 16:9 shot shown in a 9:16 frame: full height, cropped horizontally around `x` (0 left .. 1 right). */
 const VerticalCrop: React.FC<{ x: number; children: React.ReactNode }> = ({ x, children }) => {
@@ -20,7 +19,7 @@ const VerticalCrop: React.FC<{ x: number; children: React.ReactNode }> = ({ x, c
   );
 };
 
-const Hook: React.FC<{ text: string; top: number; left: number; right: number }> = ({ text, top, left, right }) => {
+const Hook: React.FC<{ text: string; top: number; left: number; right: number; accent: string }> = ({ text, top, left, right, accent }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const t = frame / fps;
@@ -41,12 +40,12 @@ const Hook: React.FC<{ text: string; top: number; left: number; right: number }>
       >
         {text}
       </div>
-      <div style={{ margin: "22px auto 0", width: 120, height: 4, backgroundColor: AMBER }} />
+      <div style={{ margin: "22px auto 0", width: 120, height: 4, backgroundColor: accent }} />
     </div>
   );
 };
 
-const EndCard: React.FC<{ text: string }> = ({ text }) => {
+const EndCard: React.FC<{ text: string; accent: string }> = ({ text, accent }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const o = interpolate(frame / fps, [0, 0.5], [0, 1], { extrapolateRight: "clamp" });
@@ -57,7 +56,7 @@ const EndCard: React.FC<{ text: string }> = ({ text }) => {
         <div style={{ fontFamily: TITLE_FONT, fontWeight: 600, fontSize: 84, lineHeight: 1.1, color: "#F6F1EA", textAlign: "center", textWrap: "balance", textShadow: "0 4px 24px rgba(0,0,0,0.7)" }}>
           {text}
         </div>
-        <div style={{ marginTop: 26, width: 140, height: 4, backgroundColor: AMBER }} />
+        <div style={{ marginTop: 26, width: 140, height: 4, backgroundColor: accent }} />
       </AbsoluteFill>
     </AbsoluteFill>
   );
@@ -132,12 +131,12 @@ export const Short: React.FC<ShortProps> = ({ plan, short, preset, captions, end
 
       {short.hook && (
         <Sequence durationInFrames={f(3)} layout="none">
-          <Hook text={short.hook} top={safe.top + 60} left={safe.left + 20} right={safe.right + 20} />
+          <Hook text={short.hook} top={safe.top + 60} left={safe.left + 20} right={safe.right + 20} accent={plan.captions.highlightColor} />
         </Sequence>
       )}
 
       <Sequence from={clipF} durationInFrames={endF} layout="none">
-        <EndCard text={endCardText} />
+        <EndCard text={endCardText} accent={plan.captions.highlightColor} />
       </Sequence>
 
       <Bookends durationSec={durationSec} />

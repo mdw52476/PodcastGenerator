@@ -49,7 +49,7 @@ export const Episode: React.FC<EpisodeProps> = ({ plan, placeholderLabels = true
       </AbsoluteFill>
 
       <GradeOverlay grade={plan.grade} />
-      <TextCards text={plan.text} />
+      <TextCards text={plan.text} accent={plan.captions.highlightColor} />
       <Captions captions={plan.captions} />
       <Bookends durationSec={plan.durationSec} />
 

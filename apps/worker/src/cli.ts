@@ -115,6 +115,12 @@ async function watch(id?: string) {
     const line = `${j.status.padEnd(9)} ${pct(j.progress)}  ${j.stage ?? ""}`;
     if (line !== last) console.log(`${new Date().toLocaleTimeString()}  ${line}`);
     last = line;
+    if (j.status === "succeeded" && (j.kind === "voice" || j.kind === "revoice")) {
+      const o = j.outputs ?? {};
+      console.log(`\n${j.kind === "voice" ? "Voiced" : "Re-voiced"} paragraph(s) ${o.voicedParagraphs?.join(", ")}: ${o.characters} characters; narration ${Number(o.durationSec).toFixed(1)} s. Preview updated.`);
+      for (const n of o.notes ?? []) console.log(`  note: ${n}`);
+      return;
+    }
     if (j.status === "succeeded" && j.kind === "prepare") {
       console.log(`\nPreview ready: ${j.outputs?.preview}`);
       return;

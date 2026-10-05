@@ -3,7 +3,6 @@ import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remo
 import type { ResolvedPlan } from "@shoebox/edit-plan";
 import { BODY_FONT, TITLE_FONT } from "./fonts";
 
-const AMBER = "#E8A33D";
 type Card = ResolvedPlan["text"][number];
 
 /** Gentle fade in and out; `fadeOut` 0 holds to the end (end card). */
@@ -37,9 +36,10 @@ const Disclosure: React.FC<{ c: Card; s: number }> = ({ c, s }) => {
   );
 };
 
-const Title: React.FC<{ c: Card; s: number; size: number; weight: number; tracking: string; rule: boolean; holdToEnd?: boolean }> = ({
+const Title: React.FC<{ c: Card; s: number; size: number; weight: number; tracking: string; rule: boolean; holdToEnd?: boolean; accent: string }> = ({
   c,
   s,
+  accent,
   size,
   weight,
   tracking,
@@ -67,12 +67,12 @@ const Title: React.FC<{ c: Card; s: number; size: number; weight: number; tracki
       >
         {c.text}
       </div>
-      {rule && <div style={{ marginTop: 18 * s, width: 140 * s, height: 3 * s, backgroundColor: AMBER, opacity: 0.9 }} />}
+      {rule && <div style={{ marginTop: 18 * s, width: 140 * s, height: 3 * s, backgroundColor: accent, opacity: 0.9 }} />}
     </AbsoluteFill>
   );
 };
 
-const LowerThird: React.FC<{ c: Card; s: number }> = ({ c, s }) => {
+const LowerThird: React.FC<{ c: Card; s: number; accent: string }> = ({ c, s, accent }) => {
   const o = useFade(c, 0.8, 0.8);
   return (
     <div
@@ -86,7 +86,7 @@ const LowerThird: React.FC<{ c: Card; s: number }> = ({ c, s }) => {
         gap: 18 * s,
       }}
     >
-      <div style={{ width: 5 * s, backgroundColor: AMBER }} />
+      <div style={{ width: 5 * s, backgroundColor: accent }} />
       <div
         style={{
           fontFamily: BODY_FONT,
@@ -104,7 +104,8 @@ const LowerThird: React.FC<{ c: Card; s: number }> = ({ c, s }) => {
   );
 };
 
-export const TextCards: React.FC<{ text: ResolvedPlan["text"] }> = ({ text }) => {
+/** `accent`: underline and bar colour; each show uses its caption highlight colour. */
+export const TextCards: React.FC<{ text: ResolvedPlan["text"]; accent?: string }> = ({ text, accent = "#E8A33D" }) => {
   const s = useVideoConfig().width / 1920;
   return (
     <>
@@ -113,13 +114,13 @@ export const TextCards: React.FC<{ text: ResolvedPlan["text"] }> = ({ text }) =>
           case "disclosure":
             return <Disclosure key={i} c={c} s={s} />;
           case "title_card":
-            return <Title key={i} c={c} s={s} size={128} weight={700} tracking="0.14em" rule />;
+            return <Title key={i} c={c} s={s} size={128} weight={700} tracking="0.14em" rule accent={accent} />;
           case "episode_title":
-            return <Title key={i} c={c} s={s} size={84} weight={400} tracking="0.04em" rule={false} />;
+            return <Title key={i} c={c} s={s} size={84} weight={400} tracking="0.04em" rule={false} accent={accent} />;
           case "end_card":
-            return <Title key={i} c={c} s={s} size={128} weight={700} tracking="0.14em" rule holdToEnd />;
+            return <Title key={i} c={c} s={s} size={128} weight={700} tracking="0.14em" rule holdToEnd accent={accent} />;
           case "lower_third":
-            return <LowerThird key={i} c={c} s={s} />;
+            return <LowerThird key={i} c={c} s={s} accent={accent} />;
           default:
             return null;
         }
